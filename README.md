@@ -155,14 +155,6 @@ python -m naive_model
 
 This will show TODO messages until you complete the implementation.
 
-**After completing your implementation**, validate it:
-
-```bash
-python evaluation/validate_implementation.py
-```
-
-This compares your results with the reference implementation. **Important**: Complete your own implementation first - the reference is for validation only, not as a template.
-
 ### Load and Explore Data
 
 ```python
@@ -316,17 +308,9 @@ The `baseline/` directory contains a **reference implementation for validation p
 
 ```text
 baseline/
-├── merton_reference.py           # Reference implementation (DO NOT COPY)
 ├── DELETE_synthetic_test.py      # Data generator (for reference only)
 └── DELETE_generate_real_data.py  # Data fetcher (for reference only)
 ```
-
-**Important**: 
-- The reference implementation is provided **only to validate your results** after you've completed your own implementation.
-- **Do NOT copy code from the reference** - implement everything yourself.
-- Use it to check if your calibration results are reasonable, not as a template.
-- You should complete `naive_model/` **before** looking at the reference.
-
 ---
 
 ## Repository Structure (Expected)
@@ -383,8 +367,7 @@ The report should include:
 3. Create a Python environment (see Setup section above).
 4. Install dependencies: `pip install -r requirements.txt`
 5. Complete the baseline in `naive_model/` (see WALKTHROUGH.md)
-7. Validate your implementation: `python evaluation/validate_implementation.py`
-8. Implement your improvement in `improved/`
+6. Implement your improvement in `improved/`
 
 ### Setup Instructions
 
@@ -393,7 +376,6 @@ The report should include:
 3. Create a Python environment (virtualenv or conda).
 4. Install dependencies listed in `requirements.txt`.
 5. **Implement the baseline model in `naive_model/`** (see WALKTHROUGH.md).
-7. **After completing your implementation**, validate it using `python evaluation/validate_implementation.py`.
 
 ---
 ## Submission Instructions
