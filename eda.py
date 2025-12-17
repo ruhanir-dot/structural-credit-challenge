@@ -51,4 +51,45 @@ EDA.risk_free_info(rf)
         
 
 
+# checking simmple data alignment across datasets for a sample firm and dates, can i find values for the date i want
+print("\n ----- Data Alignment Check ----- ")
+
+sample_firm = equity['firm_id'].iloc[0] # getting first firm
+
+mid_point = len(equity[equity['firm_id'] == sample_firm]) // 2 # getting mid point index of firm 
+
+sample_dates = equity[equity['firm_id'] == sample_firm]['date'].iloc[mid_point:mid_point+3] # getting 3 sample dates around mid point 
+
+print(f"\nData Alignment: {sample_firm}")
+print(f"Dates: {[d.date() for d in sample_dates]}\n")
+
+for sample_date in sample_dates:
+    e = equity[(equity['firm_id'] == sample_firm) & (equity['date'] == sample_date)] # equity price at date 
+    v = equity_vol[(equity_vol['firm_id'] == sample_firm) & (equity_vol['date'] == sample_date)] # equity vol at date
+    d = debt[(debt['firm_id'] == sample_firm) & (debt['date'] <= sample_date)].sort_values('date').tail(1) # most recent debt
+    r = rf[rf['date'] == sample_date] # risk free rate at date
+    
+    print(f"Date: {sample_date.date()}")
+    if not e.empty:
+        print(f"Equity Price: ${e['equity_price'].values[0]:.2f}")
+    else:
+        print(f"Equity Price: MISSING")
+    
+    if not v.empty:
+        print(f"Equity Vol: {v['equity_vol'].values[0]:.4f}")
+    else:
+        print(f"Equity Vol: MISSING")
+    
+    if not d.empty:
+        print(f"Debt (as of {d['date'].values[0]}): ${d['debt'].values[0]:,.0f}")
+    else:
+        print(f"Debt: MISSING")
+    
+    if not r.empty:
+        print(f"Risk-free Rate: {r['risk_free_rate'].values[0]:.4f}")
+    else:
+        print(f"Risk-free Rate: MISSING")
+    print()
+
+# End of eda.py
 
