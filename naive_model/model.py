@@ -32,8 +32,14 @@ def black_scholes_call(S, K, T, r, sigma):
     """
     # TODO: Implement Black-Scholes call option formula
     # Hint: Use the formula from the Mathematical Background section
-    raise NotImplementedError("Implement Black-Scholes call option pricing")
+    
+    # calculating d1 and d2
+    d1 = (np.log(S/K) + (r + (sigma**2)/2) * T) / sigma * np.sqrt(T)
+    d2 = d1 - (sigma * np.sqrt(T))
 
+    call_price = (S * norm.cdf(d1)) - (K * np.e**(-r *T) * norm.cdf(d2))
+
+    return call_price
 
 def black_scholes_vega(S, K, T, r, sigma):
     """
@@ -58,6 +64,7 @@ def black_scholes_vega(S, K, T, r, sigma):
         Vega of the call option
     """
     # TODO: Implement Black-Scholes vega
+
     raise NotImplementedError("Implement Black-Scholes vega")
 
 
