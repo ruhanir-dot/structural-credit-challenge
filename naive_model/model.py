@@ -34,10 +34,10 @@ def black_scholes_call(S, K, T, r, sigma):
     # Hint: Use the formula from the Mathematical Background section
     
     # calculating d1 and d2
-    d1 = (np.log(S/K) + (r + (sigma**2)/2) * T) / sigma * np.sqrt(T)
+    d1 = (np.log(S/K) + (r + (sigma**2)/2) * T) / (sigma * np.sqrt(T))
     d2 = d1 - (sigma * np.sqrt(T))
 
-    call_price = (S * norm.cdf(d1)) - (K * np.e**(-r *T) * norm.cdf(d2))
+    call_price = (S * norm.cdf(d1,0,1)) - (K * np.exp(-r *T) * norm.cdf(d2,0,1))
 
     return call_price
 
@@ -65,7 +65,13 @@ def black_scholes_vega(S, K, T, r, sigma):
     """
     # TODO: Implement Black-Scholes vega
 
-    raise NotImplementedError("Implement Black-Scholes vega")
+    # calculating d1
+    d1 = (np.log(S/K) + (r + (sigma**2)/2) * T) / (sigma * np.sqrt(T))
+
+    # vega formula S*N'(d1)sqrt(T) derivative of normal cdf is pdf 
+    vega = S * norm.pdf(d1,0,1) * np.sqrt(T)
+    
+    return vega
 
 
 class MertonModel:
