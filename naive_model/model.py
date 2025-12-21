@@ -69,8 +69,8 @@ def black_scholes_vega(S, K, T, r, sigma):
     d1 = (np.log(S/K) + (r + (sigma**2)/2) * T) / (sigma * np.sqrt(T))
 
     # vega formula S*N'(d1)sqrt(T) derivative of normal cdf is pdf 
-    vega = S * norm.pdf(d1,0,1) * np.sqrt(T)
-    
+    vega = norm.cdf(d1,0,1)
+
     return vega
 
 
@@ -117,8 +117,10 @@ class MertonModel:
         """
         # TODO: Implement equity valuation
         # Hint: Use black_scholes_call with V as underlying, D as strike
-        raise NotImplementedError("Implement equity valuation")
-    
+
+        E = black_scholes_call(S=V, K = D, T= self.T, r= r, sigma = sigma_V)
+        return E
+        
     def equity_volatility(self, V, D, r, sigma_V, E):
         """
         Calculate equity volatility from asset volatility.
@@ -142,6 +144,9 @@ class MertonModel:
             Equity volatility
         """
         # TODO: Implement equity volatility relationship
-        # Hint: Use vega and the relationship: sigma_E * E = vega * sigma_V * V
-        raise NotImplementedError("Implement equity volatility calculation")
+        # Hint: Use vega and the relationship: sigma_E * E = vega<-- should be delta i think * sigma_V * V
+        
+        option_delta = black_scholes_vega(S=V, K=D, T=self.T, r=r, sigma=sigma_V)
+        sigma_E = (option_delta * sigma_V * V) / E
 
+        return sigma_E
