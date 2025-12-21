@@ -33,13 +33,19 @@ def black_scholes_call(S, K, T, r, sigma):
     # TODO: Implement Black-Scholes call option formula
     # Hint: Use the formula from the Mathematical Background section
     
+    # edge cases
+    if S<= 0 or sigma <= 0 or T<=0:
+        return 0.0
+    if K <= 0: 
+        return S
+
     # calculating d1 and d2
     d1 = (np.log(S/K) + (r + (sigma**2)/2) * T) / (sigma * np.sqrt(T))
     d2 = d1 - (sigma * np.sqrt(T))
-
+    # calculating call price
     call_price = (S * norm.cdf(d1,0,1)) - (K * np.exp(-r *T) * norm.cdf(d2,0,1))
 
-    return call_price
+    return max(0, call_price) # make sure non negative
 
 def black_scholes_vega(S, K, T, r, sigma):
     """
@@ -64,11 +70,17 @@ def black_scholes_vega(S, K, T, r, sigma):
         Vega of the call option
     """
     # TODO: Implement Black-Scholes vega
+    
+    # edge cases
+    if S<= 0 or sigma <= 0 or T<=0 or K <=0:
+        return 0.0
 
     # calculating d1
     d1 = (np.log(S/K) + (r + (sigma**2)/2) * T) / (sigma * np.sqrt(T))
 
     # vega formula S*N'(d1)sqrt(T) derivative of normal cdf is pdf 
+    # but in this secnario, not calculating vega rather delta for merton model
+
     vega = norm.cdf(d1,0,1)
 
     return vega
@@ -146,7 +158,11 @@ class MertonModel:
         # TODO: Implement equity volatility relationship
         # Hint: Use vega and the relationship: sigma_E * E = vega<-- should be delta i think * sigma_V * V
         
+        if E <= 0: 
+            return 0.0
+
         option_delta = black_scholes_vega(S=V, K=D, T=self.T, r=r, sigma=sigma_V)
+        
         sigma_E = (option_delta * sigma_V * V) / E
 
         return sigma_E
