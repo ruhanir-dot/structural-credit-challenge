@@ -43,7 +43,6 @@ def calibrate_asset_parameters(E, sigma_E, D, T, r, V0=None, sigma_V0=None):
     """
     # TODO: Implement calibration
     # Hint: Use scipy.optimize.fsolve to solve the system of equations
-    # Reference: baseline/merton_reference.py has a working implementation
     
     if V0 is None:
         V0 = E + D  # Simple initial guess

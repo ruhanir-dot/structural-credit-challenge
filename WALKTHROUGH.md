@@ -116,21 +116,6 @@ In `naive_model/__main__.py`, you need to:
    results_df.to_csv('outputs/naive_results.csv', index=False)
    ```
 
-### 3.5 Validate Your Implementation
-
-**After completing your implementation**, validate it:
-
-```bash
-python evaluation/validate_implementation.py
-```
-
-This script will:
-- Test your calibration on multiple test cases
-- Compare your results with the reference implementation
-- Report if your implementation is correct
-
-**Note**: The reference implementation (`baseline/merton_reference.py`) is provided for validation only. Do not copy code from it - implement everything yourself based on the mathematical formulas in the README.
-
 ## Step 4: Diagnose Baseline Weaknesses
 
 Run your baseline on real data and look for:
