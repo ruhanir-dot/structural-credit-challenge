@@ -89,7 +89,7 @@ The unobservable parameters $V_t$ and $\sigma_V$ must be calibrated from observa
 2. **Equity volatility equation**: 
    $$\sigma_E E_t = \frac{\partial E}{\partial V} \sigma_V V_t$$
    
-   where $\frac{\partial E}{\partial V} = \Phi(d_1)$ is the option delta (vega relationship).
+   where $\frac{\partial E}{\partial V} = \Phi(d_1)$ is the option delta.
 
 This system is solved iteratively using numerical methods (e.g., `scipy.optimize.fsolve`).
 

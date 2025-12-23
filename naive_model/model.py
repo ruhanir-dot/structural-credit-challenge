@@ -35,9 +35,12 @@ def black_scholes_call(S, K, T, r, sigma):
     raise NotImplementedError("Implement Black-Scholes call option pricing")
 
 
-def black_scholes_vega(S, K, T, r, sigma):
+def black_scholes_delta(S, K, T, r, sigma):
     """
-    Vega (sensitivity to volatility) of Black-Scholes call option.
+    Delta (sensitivity to underlying price) of Black-Scholes call option.
+    
+    Delta measures how much the option price changes when the underlying price changes.
+    For a call option: delta = ∂E/∂V = Φ(d₁)
     
     Parameters:
     -----------
@@ -55,10 +58,12 @@ def black_scholes_vega(S, K, T, r, sigma):
     Returns:
     --------
     float
-        Vega of the call option
+        Delta of the call option (between 0 and 1)
     """
-    # TODO: Implement Black-Scholes vega
-    raise NotImplementedError("Implement Black-Scholes vega")
+    # TODO: Implement Black-Scholes delta
+    # Hint: Calculate d1 first, then delta = Φ(d₁) = norm.cdf(d1)
+    # d1 = (ln(S/K) + (r + sigma²/2)*T) / (sigma * sqrt(T))
+    raise NotImplementedError("Implement Black-Scholes delta")
 
 
 class MertonModel:
@@ -129,6 +134,7 @@ class MertonModel:
             Equity volatility
         """
         # TODO: Implement equity volatility relationship
-        # Hint: Use vega and the relationship: sigma_E * E = vega * sigma_V * V
+        # Hint: Use black_scholes_delta and the relationship: sigma_E * E = delta * sigma_V * V
+        # where delta = ∂E/∂V = Φ(d₁) is the option delta
         raise NotImplementedError("Implement equity volatility calculation")
 
