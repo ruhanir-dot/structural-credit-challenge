@@ -8,7 +8,7 @@ from observable equity value (E) and equity volatility (sigma_E).
 import numpy as np
 from scipy.optimize import fsolve
 
-from naive_model.model import black_scholes_call, black_scholes_vega
+from naive_model.model import black_scholes_call, black_scholes_delta
 
 
 def calibrate_asset_parameters(E, sigma_E, D, T, r, V0=None, sigma_V0=None):
@@ -17,7 +17,9 @@ def calibrate_asset_parameters(E, sigma_E, D, T, r, V0=None, sigma_V0=None):
     
     This solves the system of equations:
     1. E = BlackScholes(V, D, T, r, sigma_V)
-    2. sigma_E * E = vega(V, D, T, r, sigma_V) * sigma_V * V
+    2. sigma_E * E = (∂E/∂V) * sigma_V * V
+    
+    where ∂E/∂V = Φ(d₁) is the option delta.
     
     Parameters:
     -----------
@@ -75,8 +77,8 @@ def calibrate_asset_parameters(E, sigma_E, D, T, r, V0=None, sigma_V0=None):
         eq1 = E_calc - E
         
         # TODO: Equation 2: Equity volatility relationship
-        # vega_val = black_scholes_vega(V, D, T, r, sigma_V)
-        # E_vol_calc = (vega_val * sigma_V * V) / E if E > 0 else 0
+        # delta = black_scholes_delta(V, D, T, r, sigma_V)
+        # E_vol_calc = (delta * sigma_V * V) / E if E > 0 else 0
         # eq2 = E_vol_calc - sigma_E
         delta = black_scholes_vega(S=V, K=D, T=T, r=r, sigma=sigma_V)
         left = sigma_E * E

@@ -17,7 +17,6 @@ Firms included:
 import pandas as pd
 import numpy as np
 import yfinance as yf
-from datetime import datetime, timedelta
 import os
 import warnings
 warnings.filterwarnings('ignore')
@@ -69,26 +68,19 @@ def fetch_equity_data(ticker, start_date, end_date):
         overall_vol = hist['returns'].std() * np.sqrt(252)
         hist['vol_30d'] = hist['vol_30d'].fillna(overall_vol)
         
-        # Prepare equity prices
-        prices_data = []
+        # Prepare equity prices and volatilities in one pass
+        data = []
         for date, row in hist.iterrows():
-            prices_data.append({
+            data.append({
                 'date': date.strftime('%Y-%m-%d'),
                 'firm_id': ticker,
-                'equity_price': round(row['Close'], 2)
-            })
-        
-        # Prepare equity volatilities
-        vols_data = []
-        for date, row in hist.iterrows():
-            vols_data.append({
-                'date': date.strftime('%Y-%m-%d'),
-                'firm_id': ticker,
+                'equity_price': round(row['Close'], 2),
                 'equity_vol': round(row['vol_30d'], 4)
             })
         
-        prices_df = pd.DataFrame(prices_data)
-        vols_df = pd.DataFrame(vols_data)
+        df = pd.DataFrame(data)
+        prices_df = df[['date', 'firm_id', 'equity_price']].copy()
+        vols_df = df[['date', 'firm_id', 'equity_vol']].copy()
         
         return prices_df, vols_df
         
@@ -152,28 +144,54 @@ def fetch_debt_data(ticker, start_date, end_date):
         debt_data = []
         for date, value in debt_series.items():
             if start_dt <= date <= end_dt:
-                debt_data.append({
-                    'date': date.strftime('%Y-%m-%d'),
-                    'firm_id': ticker,
-                    'debt': round(float(value) / 1e6, 2)  # Convert to millions
-                })
+                # Skip NaN values
+                if pd.isna(value):
+                    continue
+                try:
+                    debt_value = round(float(value) / 1e6, 2)  # Convert to millions
+                    debt_data.append({
+                        'date': date.strftime('%Y-%m-%d'),
+                        'firm_id': ticker,
+                        'debt': debt_value
+                    })
+                except (ValueError, TypeError):
+                    pass
         
         if not debt_data:
-            # If no quarterly data in range, use the most recent value
-            most_recent = debt_series.index[debt_series.index <= end_dt]
-            if len(most_recent) > 0:
-                latest_date = most_recent[-1]
-                latest_value = debt_series[latest_date]
-                # Create quarterly entries
-                quarterly_dates = pd.date_range(start=start_date, end=end_date, freq='QE')
-                for q_date in quarterly_dates:
-                    debt_data.append({
-                        'date': q_date.strftime('%Y-%m-%d'),
-                        'firm_id': ticker,
-                        'debt': round(float(latest_value) / 1e6, 2)
-                    })
+            # If no data in range, find the nearest valid (non-NaN) value
+            # Try most recent value <= end_dt, then earliest value > end_dt
+            for date in reversed(debt_series.index[debt_series.index <= end_dt]):
+                value = debt_series[date]
+                if not pd.isna(value):
+                    try:
+                        debt_data.append({
+                            'date': end_date,
+                            'firm_id': ticker,
+                            'debt': round(float(value) / 1e6, 2)
+                        })
+                        break
+                    except (ValueError, TypeError):
+                        continue
+            
+            # If still no data, try future dates
+            if not debt_data:
+                for date in sorted(debt_series.index[debt_series.index > end_dt]):
+                    value = debt_series[date]
+                    if not pd.isna(value):
+                        try:
+                            debt_data.append({
+                                'date': end_date,
+                                'firm_id': ticker,
+                                'debt': round(float(value) / 1e6, 2)
+                            })
+                            break
+                        except (ValueError, TypeError):
+                            continue
         
-        return pd.DataFrame(debt_data) if debt_data else None
+        if not debt_data:
+            return None
+        
+        return pd.DataFrame(debt_data)
         
     except Exception as e:
         print(f"    Error fetching debt data for {ticker}: {e}")
@@ -218,7 +236,13 @@ def fetch_risk_free_rate(start_date, end_date, fred_api_key=None):
         
         if series.empty:
             print("    Warning: No FRED data available, using approximate values")
-            return fetch_risk_free_rate(start_date, end_date, fred_api_key=None)
+            # Fall back to approximate rates
+            dates = pd.date_range(start=start_date, end=end_date, freq='B')
+            base_rates = np.linspace(0.018, 0.009, len(dates))
+            return pd.DataFrame([{
+                'date': date.strftime('%Y-%m-%d'),
+                'risk_free_rate': round(rate, 4)
+            } for date, rate in zip(dates, base_rates)])
         
         # Convert to daily (forward fill)
         dates = pd.date_range(start=start_date, end=end_date, freq='B')
@@ -234,7 +258,13 @@ def fetch_risk_free_rate(start_date, end_date, fred_api_key=None):
     except Exception as e:
         print(f"    Error fetching FRED data: {e}")
         print("    Using approximate risk-free rates")
-        return fetch_risk_free_rate(start_date, end_date, fred_api_key=None)
+        # Fall back to approximate rates
+        dates = pd.date_range(start=start_date, end=end_date, freq='B')
+        base_rates = np.linspace(0.018, 0.009, len(dates))
+        return pd.DataFrame([{
+            'date': date.strftime('%Y-%m-%d'),
+            'risk_free_rate': round(rate, 4)
+        } for date, rate in zip(dates, base_rates)])
 
 
 def generate_real_firm_data(start_date='2020-01-01', end_date='2020-12-31', fred_api_key=None):

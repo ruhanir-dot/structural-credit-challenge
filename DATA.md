@@ -68,25 +68,34 @@ date,firm_id,equity_vol
 
 ### `debt_quarterly.csv`
 
-Quarterly debt values for each firm.
+Debt values for each firm (annual for real data, quarterly for synthetic).
 
 **Columns**:
-- `date`: Quarter end date (YYYY-MM-DD format)
+- `date`: Date (YYYY-MM-DD format) - year-end for real data, quarter-end for synthetic
 - `firm_id`: Firm identifier
 - `debt`: Total debt in millions USD
 
-**Frequency**: Quarterly (end of quarter dates)
+**Frequency**: 
+- **Real data**: Annual (year-end dates only) - Yahoo Finance provides annual data only
+- **Synthetic data**: Quarterly (end of quarter dates)
 
 **Note**:
-- For real data: Total debt from balance sheet (may not have all quarters)
-- For synthetic data: Constant debt value (ground truth parameter)
+- For real data: Total debt from balance sheet. **Yahoo Finance provides annual data only** (year-end values), so there is only one entry per company per year. This is a limitation of the data source - true quarterly debt data would require accessing SEC 10-Q filings directly.
+- For synthetic data: Constant debt value (ground truth parameter) provided quarterly
 - Debt values are in **millions** of USD
+- When aligning to daily frequency, use forward-fill from the annual/quarterly dates
 
-**Example**:
+**Example (real data)**:
 ```csv
 date,firm_id,debt
-2020-03-31,AAPL,112000.0
-2020-06-30,AAPL,112500.0
+2020-12-31,AAPL,132480.0
+```
+
+**Example (synthetic data)**:
+```csv
+date,firm_id,debt
+2020-03-31,FIRM_A,30.0
+2020-06-30,FIRM_A,30.0
 ```
 
 ### `risk_free.csv`
@@ -117,12 +126,12 @@ When using the data for modeling:
 
 1. **Date Alignment**:
    - Equity data is daily; use the most recent available price/volatility for a given date
-   - Debt data is quarterly; use forward-fill to align with daily equity data
+   - Debt data is annual (real) or quarterly (synthetic); use forward-fill to align with daily equity data
    - Risk-free rate is daily; use the rate for the specific date
 
 2. **Missing Data**:
    - If equity data is missing for a date, skip that date or use the previous day's value
-   - If debt data is missing, use the most recent quarterly value (forward-fill)
+   - If debt data is missing, use the most recent annual/quarterly value (forward-fill)
    - If risk-free rate is missing, use the most recent available rate
 
 3. **Time to Maturity (T)**:
@@ -152,9 +161,11 @@ When using the data for modeling:
 ### Real Data Limitations
 
 1. **Debt Data**: 
-   - Balance sheet data may not be available for all quarters
+   - **Yahoo Finance balance sheets only provide annual data** (year-end values), not quarterly
+   - The same annual debt value is used for all four quarters within that year
+   - This is a limitation of the free data source - true quarterly data would require accessing SEC 10-Q filings
    - Different firms may report debt differently (total debt vs. long-term debt)
-   - Use the most recent available value if quarterly data is sparse
+   - For modeling purposes, using annual values for all quarters is a reasonable approximation when quarterly data is unavailable
 
 2. **Equity Volatility**:
    - Realized volatility is calculated from historical returns
