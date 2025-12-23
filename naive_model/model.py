@@ -47,9 +47,12 @@ def black_scholes_call(S, K, T, r, sigma):
 
     return max(0, call_price) # make sure non negative
 
-def black_scholes_vega(S, K, T, r, sigma):
+def black_scholes_delta(S, K, T, r, sigma):
     """
-    Vega (sensitivity to volatility) of Black-Scholes call option.
+    Delta (sensitivity to underlying price) of Black-Scholes call option.
+    
+    Delta measures how much the option price changes when the underlying price changes.
+    For a call option: delta = ∂E/∂V = Φ(d₁)
     
     Parameters:
     -----------
@@ -67,7 +70,7 @@ def black_scholes_vega(S, K, T, r, sigma):
     Returns:
     --------
     float
-        Vega of the call option
+        Delta of the call option (between 0 and 1)
     """
     # TODO: Implement Black-Scholes vega
     
@@ -81,9 +84,9 @@ def black_scholes_vega(S, K, T, r, sigma):
     # vega formula S*N'(d1)sqrt(T) derivative of normal cdf is pdf 
     # but in this secnario, not calculating vega rather delta for merton model
 
-    vega = norm.cdf(d1,0,1)
+    delta = norm.cdf(d1,0,1)
 
-    return vega
+    return delta
 
 
 class MertonModel:
@@ -161,7 +164,7 @@ class MertonModel:
         if E <= 0: 
             return 0.0
 
-        option_delta = black_scholes_vega(S=V, K=D, T=self.T, r=r, sigma=sigma_V)
+        option_delta = black_scholes_delta(S=V, K=D, T=self.T, r=r, sigma=sigma_V)
         
         sigma_E = (option_delta * sigma_V * V) / E
 

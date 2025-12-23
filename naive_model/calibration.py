@@ -80,7 +80,7 @@ def calibrate_asset_parameters(E, sigma_E, D, T, r, V0=None, sigma_V0=None):
         # delta = black_scholes_delta(V, D, T, r, sigma_V)
         # E_vol_calc = (delta * sigma_V * V) / E if E > 0 else 0
         # eq2 = E_vol_calc - sigma_E
-        delta = black_scholes_vega(S=V, K=D, T=T, r=r, sigma=sigma_V)
+        delta = black_scholes_delta(S=V, K=D, T=T, r=r, sigma=sigma_V)
         left = sigma_E * E
         right = delta * sigma_V * V
         eq2 = right - left
@@ -150,7 +150,7 @@ def calibrate_with_validation(E, sigma_E, D, T, r, verbose=False):
     
     # verify, recomputing E and sigma_E
     E_check = black_scholes_call(V, D, T, r, sigma_V)
-    delta = black_scholes_vega(V, D, T, r, sigma_V)
+    delta = black_scholes_delta(V, D, T, r, sigma_V)
     sigma_E_check = (delta * sigma_V * V) / E_check if E_check > 0 else 0
     
     # check error
