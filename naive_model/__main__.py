@@ -29,15 +29,35 @@ def main():
     """
     print("Baseline Merton Model")
     print("=" * 60)
-    
+
     # TODO: Load data from data/real/ or data/synthetic/
 
-    # Loading in Data
-    equity_prices = pd.read_csv('data/synthetic/equity_prices.csv', parse_dates=['date'])
-    equity_vol = pd.read_csv('data/synthetic/equity_vol.csv', parse_dates=['date'])
-    debt = pd.read_csv('data/synthetic/debt_quarterly.csv', parse_dates=['date'])
-    risk_free = pd.read_csv('data/synthetic/risk_free.csv', parse_dates=['date'])
+    # Dataset selection, real or synthetic 
 
+    USE_REAL_DATA = True  # toggle depending
+    
+    if USE_REAL_DATA:
+        data_path = 'data/real'
+        # outstanding shares
+        shares_outstanding = {
+            'AAPL': 17.00e9,    # post 4-for-1 split (Aug 2020)
+            'JPM': 3.07e9,      # no split
+            'TSLA': 0.96e9,     # post 5-for-1 split (Aug 2020)
+            'XOM': 4.23e9,      # no split
+            'F': 3.92e9         # no split
+            }
+        print("REAL data")
+    else:
+        data_path = 'data/synthetic'
+        shares_outstanding = None
+        print("SYNTHETIC data")
+    
+    # loading in data depending on USE_REAL_DATA
+    equity_prices = pd.read_csv(f'{data_path}/equity_prices.csv', parse_dates=['date'])
+    equity_vol = pd.read_csv(f'{data_path}/equity_vol.csv', parse_dates=['date'])
+    debt = pd.read_csv(f'{data_path}/debt_quarterly.csv', parse_dates=['date'])
+    risk_free = pd.read_csv(f'{data_path}/risk_free.csv', parse_dates=['date'])
+    
 
     # TODO: For each firm and date:
     # 1. Get equity value (E), equity volatility (sigma_E), debt (D), risk-free rate (r)
@@ -64,12 +84,26 @@ def main():
         firm_debt_quarterly= debt[debt['firm_id'] == firm_id]
         firm_rf = risk_free
 
-        # align debt date
-        firm_debt_daily = firm_debt_quarterly.set_index('date')['debt'].reindex(
-            firm_equity['date'].unique(),
-            method='ffill'
-        ).reset_index()
-        firm_debt_daily.columns = ['date', 'debt']
+        if USE_REAL_DATA:
+            # real data use merge_asof for proper forward-fill
+            # debt dates may not overlap with equity dates
+            equity_dates = pd.Series(firm_equity['date'].unique()).sort_values()
+            firm_debt_daily = pd.merge_asof(
+                pd.DataFrame({'date': equity_dates}),
+                firm_debt_quarterly[['date', 'debt']].sort_values('date'),
+                on='date',
+                direction='forward'  # forward fill using most recent debt
+            )
+            # backfill for dates before first debt date
+            if firm_debt_daily['debt'].isna().any():
+                firm_debt_daily['debt'] = firm_debt_daily['debt'].bfill()
+        else:
+            # synthetic data multiple quarterly values
+            firm_debt_daily = firm_debt_quarterly.set_index('date')['debt'].reindex(
+                firm_equity['date'].unique(),
+                method='ffill'
+            ).ffill().reset_index()
+            firm_debt_daily.columns = ['date', 'debt']
 
         # merge data together
         firm_data = firm_equity.merge(firm_vol, on=['date', 'firm_id'])
@@ -84,6 +118,10 @@ def main():
             sigma_E = row['equity_vol']
             D = row['debt']
             r = row['risk_free_rate']
+            
+            if USE_REAL_DATA:
+                E = E * shares_outstanding[firm_id] / 1e6  # type: ignore # market cap in millions
+                D = D  # already in millions
             
             # check for missing or invalid data
             if pd.isna([E, sigma_E, D, r]).any() or E <= 0 or sigma_E <= 0 or D <= 0:
@@ -154,7 +192,7 @@ def main():
     Path('outputs').mkdir(exist_ok=True)
     
     # save to CSV, commented it don't want multiple rn
-    # results_df.to_csv('outputs/naive_results.csv', index=False)
+    results_df.to_csv('outputs/naive_real_test_results.csv', index=False)
     
     print("\n")
     print("----- results -----")
@@ -173,8 +211,31 @@ def main():
         print(f"  Mean o_V: {success_df['sigma_V'].mean():.2%}")
         print(f"  Mean DD: {success_df['DD'].mean():.2f}")
         print(f"  Mean PD: {success_df['PD'].mean():.2%}")
+    
+    # per-firm breakdown
+    if successful > 0:
+        print("\n")
+        print("----- Firm breakdown -----")
+    
+        for firm in firms:
+            firm_data = results_df[(results_df['firm_id'] == firm) & (results_df['success'] == True)]
+        
+            if len(firm_data) > 0:
+                # calculate metrics
+                leverage = (firm_data['D'] / firm_data['E']).mean()
+                mean_pd = firm_data['PD'].mean()
+                mean_dd = firm_data['DD'].mean()
+                mean_e = firm_data['E'].mean()
+                mean_v = firm_data['V'].mean()
+            
+                print(f"\n{firm}:")
+                print(f"  Observations: {len(firm_data)}/{len(results_df[results_df['firm_id'] == firm])} successful")
+                print(f"  Mean E (market cap): ${mean_e:,.0f}M")
+                print(f"  Mean V (asset value): ${mean_v:,.0f}M")
+                print(f"  Mean Leverage (D/E): {leverage:.3f} ({leverage*100:.1f}%)")
+                print(f"  Mean PD: {mean_pd:.2%}")
+                print(f"  Mean DD: {mean_dd:.2f}")
 
 
 if __name__ == "__main__":
     main()
-

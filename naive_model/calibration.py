@@ -105,7 +105,7 @@ def calibrate_asset_parameters(E, sigma_E, D, T, r, V0=None, sigma_V0=None):
         if V < E * 1.01: # V should be larger than E by small margin
             return None, None
         
-        if sigma_V>1.0 or sigma_V < 0.001:
+        if sigma_V>2.0 or sigma_V < 0.0001:
             return None, None
         
         return V, sigma_V
