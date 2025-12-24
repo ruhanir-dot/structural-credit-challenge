@@ -29,10 +29,7 @@ def black_scholes_call(S, K, T, r, sigma):
     --------
     float
         Call option price
-    """
-    # TODO: Implement Black-Scholes call option formula
-    # Hint: Use the formula from the Mathematical Background section
-    
+    """    
     # edge cases
     if S<= 0 or sigma <= 0 or T<=0:
         return 0.0
@@ -71,9 +68,7 @@ def black_scholes_delta(S, K, T, r, sigma):
     --------
     float
         Delta of the call option (between 0 and 1)
-    """
-    # TODO: Implement Black-Scholes vega
-    
+    """    
     # edge cases
     if S<= 0 or sigma <= 0 or T<=0 or K <=0:
         return 0.0
@@ -130,8 +125,6 @@ class MertonModel:
         float
             Equity value
         """
-        # TODO: Implement equity valuation
-        # Hint: Use black_scholes_call with V as underlying, D as strike
 
         E = black_scholes_call(S=V, K = D, T= self.T, r= r, sigma = sigma_V)
         return E
@@ -158,8 +151,6 @@ class MertonModel:
         float
             Equity volatility
         """
-        # TODO: Implement equity volatility relationship
-        # Hint: Use vega and the relationship: sigma_E * E = vega<-- should be delta i think * sigma_V * V
         
         if E <= 0: 
             return 0.0

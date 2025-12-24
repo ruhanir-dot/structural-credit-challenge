@@ -30,14 +30,14 @@ def main():
     print("Baseline Merton Model")
     print("=" * 60)
 
-    # TODO: Load data from data/real/ or data/synthetic/
+    # Load data from data/real/ or data/synthetic/
 
     # Dataset selection, real or synthetic 
-
-    USE_REAL_DATA = True  # toggle depending
+    USE_REAL_DATA = True  # toggle depending on if ur using real or synthetic
     
     if USE_REAL_DATA:
         data_path = 'data/real'
+        
         # outstanding shares
         shares_outstanding = {
             'AAPL': 17.00e9,    # post 4-for-1 split (Aug 2020)
@@ -59,7 +59,7 @@ def main():
     risk_free = pd.read_csv(f'{data_path}/risk_free.csv', parse_dates=['date'])
     
 
-    # TODO: For each firm and date:
+    # For each firm and date:
     # 1. Get equity value (E), equity volatility (sigma_E), debt (D), risk-free rate (r)
     # 2. Set time to maturity (T, e.g., 1.0 year)
     # 3. Calibrate: V, sigma_V = calibrate_asset_parameters(E, sigma_E, D, T, r)
@@ -179,11 +179,6 @@ def main():
                 'success': True
             })
     
-    # TODO: Output results
-    # Example:
-    # results_df = pd.DataFrame(results)
-    # results_df.to_csv('outputs/baseline_results.csv', index=False)
-    # print("\nResults saved to outputs/baseline_results.csv")
     
     # output results
     results_df = pd.DataFrame(results)
@@ -191,8 +186,8 @@ def main():
     # create output directory if doesnt exist
     Path('outputs').mkdir(exist_ok=True)
     
-    # save to CSV, commented it don't want multiple rn
-    results_df.to_csv('outputs/naive_real_test_results.csv', index=False)
+    # save to CSV
+    results_df.to_csv('outputs/naive_model_results.csv', index=False)
     
     print("\n")
     print("----- results -----")

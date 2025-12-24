@@ -28,7 +28,6 @@ ENV/
 
 # IDE
 .vscode/
-.cursor/
 .idea/
 *.swp
 *.swo
@@ -44,8 +43,8 @@ ENV/
 # data/synthetic/*.csv
 
 # Outputs
-outputs/*
-!outputs/.gitkeep
+#outputs/*
+#!outputs/.gitkeep
 
 # OS
 .DS_Store
