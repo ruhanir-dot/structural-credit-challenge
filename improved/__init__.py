@@ -1,7 +1,7 @@
 """
-Baseline Merton Model Implementation
+Improved Merton Model Implementation with Exponential Smoothing
 
-This package contains your baseline Merton structural credit model implementation.
+This package contains improved Merton structural credit model implementation.
 Complete the functions in the respective modules.
 """
 
