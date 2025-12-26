@@ -18,13 +18,13 @@
 \maketitle
 \section{Introduction}
 This report presents an implementation and improvement of the Merton (1974) 
-structural credit model for estimating default probabilities. The baseline model treats equity 
+structural credit model. The baseline model treats equity 
 as a call option on firm assets and calibrates unobservable asset values and volatilities from market-observable equity prices (stock prices) and 
-volatilities. After implementing and diagnosing the baseline model on 2020 data for five U.S. firms (Apple, JPMorgan Chase, Tesla, ExxonMobil, and Ford), 
-we identified \textbf{default probability (PD) instability} as the primary weakness: all firms exhibit coefficient of variation (CV) $> 1.0$, making the model unsuitable
- for daily credit risk monitoring.
+volatilities. After implementing and diagnosing the baseline model on API-fetched 2020 data for five U.S. firms (Apple, JPMorgan Chase, Tesla, ExxonMobil, and Ford), 
+we identified default probability (PD) instability as a primary weakness: all firms exhibit coefficient of variation (CV) $> 1.0$, making the model unsuitable
+for daily credit risk monitoring.
 
-To approach this issue we implement \textbf{exponential smoothing} ($\alpha = 0.1$) as a minimal improvement that reduces PD volatility by 15--20\% and daily changes by 25--50\% 
+To approach this issue we implement exponential smoothing as a minimal improvement that reduces PD volatility by 15--20\% and daily changes by 25--50\% 
 while preserving the model's ability to properly capture credit deterioration during crisis periods.
 
 \section{Model Formulation}
