@@ -13,7 +13,7 @@
 \title{Technical Report: Merton Structural Credit Model \\
 \large{with Exponential Smoothing Improvement}}
 \author{Ruhani Rekhi}
-\date{December 24, 2025}
+\date{December 25, 2025}
 \begin{document}
 \maketitle
 \section{Introduction}
@@ -26,9 +26,72 @@ we identified \textbf{default probability (PD) instability} as the primary weakn
 
 To approach this issue we implement \textbf{exponential smoothing} ($\alpha = 0.1$) as a minimal improvement that reduces PD volatility by 15--20\% and daily changes by 25--50\% 
 while preserving the model's ability to properly capture credit deterioration during crisis periods.
-\end{document}
 
 \section{Model Formulation}
+The Merton model views a firm's equity as a European call option on its assets, with the strike price being the face value of its debt.
+The key equations and assumptions of the baseline Merton model are outlined below.
 
 \subsection{Baseline Merton Model}
-The Merton Model is a 
+
+\subsubsection{Key Assumptions}
+\begin{enumerate}
+    \item Firm asset value $V_t$ follows geometric Brownian motion: 
+    \begin{equation}
+        dV_t = \mu V_t \, dt + \sigma_V V_t \, dW_t
+    \end{equation}
+    \item Firm has zero-coupon debt with face value $D$ maturing at time $T$
+    \item Default occurs only at maturity $T$ if $V_T < D$
+    \item Equity is a European call option on firm assets: $E = \max(V_T - D, 0)$
+    \item Markets are frictionless (no transaction costs), trading is continuous, no arbitrage(no riskless profit opportunities)
+\end{enumerate}
+
+\subsubsection{Key Equations/ Mathematical Formulation}
+\paragraph{Equity Value} Under the Merton model, equity value is given by the Black-Scholes call option formula:
+\begin{equation}
+    E = V \cdot \Phi(d_1) - D \cdot e^{-r(T-t)} \cdot \Phi(d_2)
+\end{equation}
+where
+\begin{align}
+    d_1 &= \frac{\ln(V/D) + (r + \sigma_V^2/2)(T-t)}{\sigma_V\sqrt{T-t}} \\
+    d_2 &= d_1 - \sigma_V\sqrt{T-t}
+\end{align}
+and $\Phi(\cdot)$ denotes the standard normal cumulative distribution function.
+
+\paragraph{Equity Volatility} The relationship between equity volatility $\sigma_E$ and asset volatility $\sigma_V$ is:
+\begin{equation}
+    \sigma_E \cdot E = \Phi(d_1) \cdot \sigma_V \cdot V
+\end{equation}
+
+where $\Phi(d_1)$ is the option delta, representing the sensitivity of equity value to changes in asset value.
+
+\paragraph{Default Probability} The risk-neutral probability of default at maturity is:
+\begin{equation}
+    \text{PD} = \Phi(-d_2) = \Phi\left(-\frac{\ln(V/D) + (r - \sigma_V^2/2)T}{\sigma_V\sqrt{T}}\right)
+\end{equation}
+
+\paragraph{Distance-to-Default} The distance-to-default metric is:
+\begin{equation}
+    \text{DD} = \frac{\ln(V/D) + (r - \sigma_V^2/2)T}{\sigma_V\sqrt{T}}
+\end{equation}
+
+\subsubsection{Calibration Approach}
+The Merton model calibration involves solving the following system of equations for the unobservable asset value $V$ and asset volatility $\sigma_V$,
+given the observable equity value $E$, equity volatility $\sigma_E$, debt face value $D$, time to maturity $T-t$, and risk-free rate $r$:
+\begin{align}
+    E &= \text{BlackScholes}(V, D, T-t, r, \sigma_V) \\
+    \sigma_E \cdot E &= \Phi(d_1) \cdot \sigma_V \cdot V
+\end{align}
+
+\subsection{Improved Model}
+
+\subsubsection{Modification}
+We apply post-processing exponential smoothing to default probabilities. For each firm's time series of raw PDs $\{\text{PD}_t^{\text{raw}}\}$ we applied the following smoothing formula:
+\begin{equation}
+    \text{PD}_t^{\text{smooth}} = \alpha \cdot \text{PD}_t^{\text{raw}} + (1 - \alpha) \cdot \text{PD}_{t-1}^{\text{smooth}}
+\end{equation}
+where $\alpha = 0.1$ is the smoothing parameter.
+
+
+
+
+\end{document}

@@ -50,3 +50,11 @@ ENV/
 .DS_Store
 Thumbs.db
 
+# Latex 
+*.aux
+*.fdb_latexmk
+*.fls
+*.log
+*.out
+*.synctex.gz
+
