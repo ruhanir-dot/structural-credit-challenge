@@ -18,9 +18,7 @@
 \maketitle
 \section{Introduction}
 This report presents an implementation and improvement of the Merton (1974) 
-structural credit model. The baseline model treats equity 
-as a call option on firm assets and calibrates unobservable asset values and volatilities from market-observable equity prices (stock prices) and 
-volatilities. After implementing and diagnosing the baseline model on API-fetched 2020 data for five U.S. firms (Apple, JPMorgan Chase, Tesla, ExxonMobil, and Ford), 
+structural credit model. After implementing and diagnosing the baseline model on API-fetched 2020 data for five U.S. firms (Apple, JPMorgan Chase, Tesla, ExxonMobil, and Ford), 
 we identified default probability (PD) instability as a primary weakness: all firms exhibit coefficient of variation (CV) $> 1.0$, making the model unsuitable
 for daily credit risk monitoring.
 
@@ -91,7 +89,52 @@ We apply post-processing exponential smoothing to default probabilities. For eac
 \end{equation}
 where $\alpha = 0.1$ is the smoothing parameter.
 
+\subsubsection{Justification}
 
+This improvement is justified on two grounds. Theoretically speaking, the baseline model assumes you can trade infinitely with no transaction costs. Whereas in reality, trading is discrete 
+and every trade has costs leading to noise in observed prices that isn't properly captured in the model. Additionally, daily equity volatility contains high-frequency noise (changes in company value, as well as market microstructure noise) which is
+further amplified through the nonlinear Black-Scholes model into asset volatility thus into PD estimates. 
+Practically speaking, PD estimates play a key role in credit risk management for portfolio monitoring, capital alllocation, and risk limits. When daily PD estimates 
+oscillate wildly (for example 5-20 percent points as seen in the baseline model), they become operationally unusable. 
+This is why smoothing techniques are applied in practice to reduce noise while preserving signal.
+
+\subsubsection{Mathematical Formulation of Improvement}
+
+The exponential weighted moving average (EWMA), the smoothing formula we are using, has the following properties.
+\begin{itemize}
+    \item Parameter $\alpha$ controls reactivity: lower $\alpha$ yields more smoothing
+    \item No look-ahead bias (uses only past observations)
+    \item Preserves long-term trends while filtering short-term noise
+    \item Weights decay exponentially: observation $k$ periods ago has weight $\alpha(1-\alpha)^k$
+\end{itemize}
+
+Diving into the math, property 1 of the EWMA smoothing formula which is equation (10) can be demonstrated by unrolling the recursion:
+\begin{equation}
+    \text{PD}_t^{\text{smooth}} = \alpha \sum_{k=0}^{\infty} (1-\alpha)^k \cdot \text{PD}_{t-k}^{\text{raw}}
+\end{equation}
+This shows how $\alpha$ controls the weight decay rate, thus the reactivity. For example, with $\alpha = 0.9$ the decay factor
+$(1-\alpha) = 0.1$ which means today would be 90\%, yesterday 9\%, two days ago 0.9\%, etc. Showing that the higher alpha 
+has high reactivity to recent changes since recent data dominates. Conversely, with $\alpha = 0.1$ the decay factor $(1-\alpha) = 0.9$ which means today would be 10\%, 
+yesterday 9\%, two days ago 8.1\%, etc. This shows that lower alpha has low reactivity since weights are more evenly spread out over time.
+
+Property 2 is evident since the formula only uses $\text{PD}_t^{\text{raw}}$ and $\text{PD}_{t-1}^{\text{smooth}}$ which is computed from past raw PDs.
+Additionally the code implementation processes data chronologically to avoid look-ahead bias.
+
+Property 3 is evident since the EWMA formula averages over past raw PDs, thus filtering out high-frequency noise while preserving long-term trends.
+
+Property 4 is shown in equation (11) where the weight for observation $k$ periods ago is $\alpha(1-\alpha)^k$, demonstrating the exponential decay.
+
+
+\subsubsection{Calibration Changes}
+
+Smoothing is applied post-calibration. The algorithm is:
+\begin{enumerate}
+    \item Calibrate $(V, \sigma_V)$ using baseline approach
+    \item Compute $\text{PD}_t^{\text{raw}}$ from equation (6)
+    \item Apply EWMA smoothing to obtain $\text{PD}_t^{\text{smooth}}$
+\end{enumerate}
+
+Note that asset values $V$, asset volatilities $\sigma_V$, and distance-to-default remain unchanged from the baseline model.
 
 
 \end{document}
