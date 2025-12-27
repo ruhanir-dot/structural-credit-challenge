@@ -136,5 +136,47 @@ Smoothing is applied post-calibration. The algorithm is:
 
 Note that asset values $V$, asset volatilities $\sigma_V$, and distance-to-default remain unchanged from the baseline model.
 
+\section{Calibration Methodology}
+
+\subsection{Numerical Method}
+We solve the system of two non-linear equations for two unknowns using 
+scipy's \texttt{fsolve} optimizer, which implements a modified Powell 
+hybrid method---a quasi-Newton approach with adaptive damping.
+
+\paragraph{System of Equations}
+\begin{align}
+    F_1(V, \sigma_V) &= \text{BlackScholes}(V, D, T, r, \sigma_V) - E = 0 \\
+    F_2(V, \sigma_V) &= \Phi(d_1) \cdot \sigma_V \cdot V - \sigma_E \cdot E = 0
+\end{align}
+
+\paragraph{Algorithm}
+We use scipy's \texttt{fsolve} optimizer with the following parameters:
+
+\begin{enumerate}
+    \item \textbf{Initialize:}
+    \begin{align}
+        V_0 &= E + D \quad \text{(balance sheet approximation)} \\
+        \sigma_{V,0} &= \sigma_E \cdot \frac{E}{E + D} \quad \text{(de-levered volatility)}
+    \end{align}
+    
+    \item \textbf{Solve:} Call \texttt{fsolve(equations, [V\_0, $\sigma$\_V,0], xtol=1e-6)}
+    
+    \texttt{fsolve} implements a modified Powell hybrid method that approximates the Jacobian
+    via finite differences, uses a trust region approach with adaptive damping, and converges when  the relative error in the solution update ($\Delta x$) is 
+    $||\Delta x|| < 10^{-6}$.
+    
+    \item \textbf{Validate:} After convergence, check the convergence flag utilizing ier (integer flag that indicates sucess or failure of solver)
+    \texttt{ier == 1}, the economic validity (asset value should be larger than equity value by a small margin) $V \geq 1.01E$, 
+    and reasonable range $0.01\% \leq \sigma_V \leq 200\%$.
+\end{enumerate}
+
+\subsection{Edge Case Handling}
+
+\begin{enumerate}
+    \item \textbf{Invalid inputs}: ($E \leq 0$, $\sigma_E \leq 0$, $D < 0$): reject observation
+    \item \textbf{Jacobian singularity}: reject observation (caught through code exception handling)
+    \item \textbf{Non-convergence}: reject observation (caught through \texttt{fsolve} ier flag)
+    \item \textbf{Economic Validity}: $V > 1.01E$ (covered in validation above) 
+\end{enumerate}
 
 \end{document}
