@@ -126,6 +126,87 @@ def plot_all_firms_pd(naive, improved):
     plt.tight_layout()
     plt.savefig('outputs/comparison_all_firms_pd.png', dpi=300, bbox_inches='tight')
 
+def compare_improvement_metrics(naive, improved):
+    """
+    Compare improvement metrics for Table 2.
+    
+    Calculates:
+    1. Coefficient of Variation (CV = σ/μ)
+    2. Mean Daily Change (in percentage points)
+    3. Reduction percentages for both metrics
+    """
+    print("\n" + "="*60)
+    print("Improvement Metrics for table 2")
+    print("="*60)
+    
+    # calculate coefficient of variation st.dev/mean
+
+    naive_mean = naive.groupby('firm_id')['PD'].mean()
+    naive_std = naive.groupby('firm_id')['PD'].std()
+    naive_cv = naive_std / naive_mean
+    
+    improved_mean = improved.groupby('firm_id')['PD'].mean()
+    improved_std = improved.groupby('firm_id')['PD'].std()
+    improved_cv = improved_std / improved_mean
+    
+    print("\n----- Coefficient of Variation (CV = σ/μ): ------")
+    print("\nNaive Model:")
+    print(naive_cv)
+    print("\nImproved Model:")
+    print(improved_cv)
+    
+    print(f"\nAverage CV:")
+    print(f"  Naive:    {naive_cv.mean():.4f}")
+    print(f"  Improved: {improved_cv.mean():.4f}")
+    print(f"  Change:   {improved_cv.mean() - naive_cv.mean():.4f}")
+    
+    # calculate CV reduction percentage
+    cv_improvement_pct = (naive_cv - improved_cv) / naive_cv * 100
+    print(f"\nCV Reduction by Firm:")
+    for firm in cv_improvement_pct.index:
+        print(f"  {firm}: {cv_improvement_pct[firm]:.1f}% reduction")
+    
+    # calculate Mean Daily Change (in percentage points)
+    firms = ['AAPL', 'JPM', 'TSLA', 'XOM', 'F']
+    naive_daily = {}
+    improved_daily = {}
+    
+    for firm in firms:
+        # firm data sorted by date
+        naive_firm = naive[naive['firm_id'] == firm].sort_values('date')
+        improved_firm = improved[improved['firm_id'] == firm].sort_values('date')
+        
+        # calculate mean daily change (convert to percentage points)
+        naive_daily[firm] = np.mean(np.abs(np.diff(naive_firm['PD'].values))) * 100
+        improved_daily[firm] = np.mean(np.abs(np.diff(improved_firm['PD'].values))) * 100
+    
+    # convert to Series for display
+    naive_daily_series = pd.Series(naive_daily, name='Daily_Change')
+    improved_daily_series = pd.Series(improved_daily, name='Daily_Change')
+    
+    print("\n----- Mean Daily Change (percentage points): ------")
+    print("\nNaive Model:")
+    print(naive_daily_series)
+    print("\nImproved Model:")
+    print(improved_daily_series)
+    
+    print(f"\nAverage Daily Change:")
+    print(f"  Naive:    {naive_daily_series.mean():.4f} percentage points")
+    print(f"  Improved: {improved_daily_series.mean():.4f} percentage points")
+    print(f"  Change:   {improved_daily_series.mean() - naive_daily_series.mean():.4f} percentage points")
+    
+    # calculate daily change reduction percentage
+    daily_improvement_pct = (naive_daily_series - improved_daily_series) / naive_daily_series * 100
+    print(f"\nDaily Change Reduction by Firm:")
+    for firm in daily_improvement_pct.index: # type: ignore
+        print(f"  {firm}: {daily_improvement_pct[firm]:.1f}% reduction")
+    
+    print("\n----- Summary: ------")
+    print(f"Average CV reduction:           {cv_improvement_pct.mean():.1f}%")
+    print(f"Average daily change reduction: {daily_improvement_pct.mean():.1f}%")
+    
+    return naive_cv, improved_cv, naive_daily_series, improved_daily_series
+
 
 def main():
     """Main comparison function."""
@@ -143,6 +224,7 @@ def main():
     #compare metrics
     compare_time_series_stability(naive, improved)
     compare_cross_sectional_ranking(naive, improved)
+    compare_improvement_metrics(naive, improved)
     
    
     plot_all_firms_pd(naive, improved)
