@@ -89,15 +89,20 @@ We apply post-processing exponential smoothing to default probabilities. For eac
 where $\alpha = 0.1$ is the smoothing parameter.
 
 \subsubsection{Justification}
-
 This improvement is justified on two grounds. Theoretically speaking, the baseline model assumes you can trade infinitely with no transaction costs. Whereas in reality, trading is discrete 
 and every trade has costs leading to noise in observed prices that isn't properly captured in the model. Additionally, daily equity volatility contains high-frequency noise (changes in company value, as well as market microstructure noise) which is
 further amplified through the nonlinear Black-Scholes model into asset volatility thus into PD estimates. 
-Practically speaking, PD estimates play a key role in credit risk management for portfolio monitoring, capital alllocation, and risk limits. When daily PD estimates 
+Practically speaking, PD estimates play a key role in credit risk management for portfolio monitoring, capital allocation, and risk limits. When daily PD estimates 
 oscillate wildly (for example 5-20 percent points as seen in the baseline model), they become operationally unusable. 
 This is why smoothing techniques are applied in practice to reduce noise while preserving signal.
+While structural improvements (first-passage time, stochastic volatility, jump diffusion) could address PD instability, they introduce significant complexity and 
+additional parameters requiring calibration. Given the empirical focus of this assignment and the operational use case, 
+we implement exponential smoothing as a minimal, transparent, and interpretable improvement that directly addresses the diagnosed weakness without 
+introducing model risk from additional assumptions.
+
 
 \subsubsection{Mathematical Formulation of Improvement}
+
 
 The exponential weighted moving average (EWMA), the smoothing formula we are using, has the following properties.
 \begin{itemize}
@@ -164,7 +169,7 @@ We use scipy's \texttt{fsolve} optimizer with the following parameters:
     via finite differences, uses a trust region approach with adaptive damping, and converges when  the relative error in the solution update ($\Delta x$) is 
     $||\Delta x|| < 10^{-6}$.
     
-    \item \textbf{Validate:} After convergence, check the convergence flag utilizing ier (integer flag that indicates sucess or failure of solver)
+    \item \textbf{Validate:} After convergence, check the convergence flag utilizing ier (integer flag that indicates success or failure of solver)
     \texttt{ier == 1}, the economic validity (asset value should be larger than equity value by a small margin) $V \geq 1.01E$, 
     and reasonable range $0.01\% \leq \sigma_V \leq 200\%$.
 \end{enumerate}
@@ -245,7 +250,7 @@ However, most of the variation we see in debt-to-equity ratios stems from equity
 \section{Baseline Model Diagnosis}
 
 \subsection{Identified Weaknesses}
-The primary weakness identified in the baseline Merton model is default probability insability.
+The primary weakness identified in the baseline Merton model is default probability instability.
 All five firms show excessive PD volatility displayed in key metrics below:
 
 Table~\ref{tab:baseline_metrics} summarizes the stability metrics for the baseline model:
@@ -270,7 +275,7 @@ Ford & 6.38\% & 10.78\% & 1.69 \\
 All firms exhibit CV between 1.69 and 3.03, indicating that standard 
 deviation is 1.7 to 3 times the mean PD. While no universal CV threshold 
 exists in credit risk practice, CV values exceeding 1.0 indicate 
-standard deviation exceeds the mean, representing a high signal-to-noise 
+standard deviation exceeds the mean, representing a high noise-to-signal 
 ratio in this context making it unsuitable for operational risk management.
 \paragraph{Universal Instability Pattern} 
 The instability problem in Table~\ref{tab:baseline_metrics} affects all firms 
@@ -317,6 +322,171 @@ Both forms of instability are problematic for risk management as they lead to un
 Even the best-performing case (XOM with CV = 2.52 and max jump = 2.3\%pts) exceeds our reference thresholds, 
 indicating no firm in the sample produces baseline estimates suitable for risk management without smoothing. 
 
+\section{Improved Model Results}
+\subsection{Quantitative Comparisons}
+We will be evaluating the improvement using two metrics that capture different dimensions of PD Stability:
+\paragraph{Coefficient of Variation (CV)}  As previously defined the CV metric ($CV = \sigma/\mu$) measures the relative volatility of PD estimates, by expressing standard deviation
+as a proportion of the mean. This metric is dimensionless allowing fair comparison across firms with different risk levels. A CV exceeding 1.0 can be viewed as a reference threshold 
+since it indicates standard deviation exceeds the mean, which represents a high noise-to-signal ratio. But more generally speaking lower CV values indicate better stability.
+\paragraph{Mean Daily Change} The mean daily change measures the average absolute day-to-day PD movement 
+in percentage points: $\text{mean}(|\Delta PD_t|)$ where $\Delta PD_t = PD_t - PD_{t-1}$. 
+This metric captures operational stability where large daily changes can trigger limit breaches,
+portfolio rebalancing, and complicate credit pricing. Lower values indicate more stable
+estimates suitable for practical risk management.
+
+\subsubsection{Improvement Results}
+
+Table 3 presents the stability improvements achieved through exponential smoothing ($\alpha = 0.1$):
+
+\begin{table}[H]
+\centering
+\caption{Improvement Results: Coefficient of Variation and Daily Change Reduction}
+\label{tab:improvement}
+\begin{tabular}{lcccccc}
+\toprule
+& \multicolumn{3}{c}{\textbf{Coefficient of Variation (CV)}} & \multicolumn{3}{c}{\textbf{Mean Daily Change (\%pts)}} \\
+\cmidrule(lr){2-4} \cmidrule(lr){5-7}
+\textbf{Firm} & \textbf{Baseline} & \textbf{Improved} & \textbf{Reduction} & \textbf{Baseline} & \textbf{Improved} & \textbf{Reduction} \\
+\midrule
+AAPL & 3.03 & 2.41 & $\downarrow$20.3\% & 0.012 & 0.008 & $\downarrow$33.8\% \\
+JPM  & 2.22 & 1.89 & $\downarrow$14.9\% & 0.303 & 0.226 & $\downarrow$25.2\% \\
+TSLA & 1.72 & 1.47 & $\downarrow$14.5\% & 0.320 & 0.161 & $\downarrow$49.7\% \\
+XOM  & 2.52 & 2.10 & $\downarrow$16.5\% & 0.086 & 0.047 & $\downarrow$45.1\% \\
+Ford & 1.69 & 1.42 & $\downarrow$16.2\% & 0.488 & 0.297 & $\downarrow$39.1\% \\
+\midrule
+\textbf{Avg} & \textbf{2.23} & \textbf{1.86} & $\bm{\downarrow}$\textbf{16.5\%} & \textbf{0.242} & \textbf{0.148} & $\bm{\downarrow}$\textbf{38.6\%} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The improved model achieves substantial stability improvement across both our metrics. 
+The average CV reduction of 16.5\%  demonstrates systematic improvement 
+in relative volatility across all firms. While all firms still exceed CV = 1.0, the improved model 
+brings them substantially closer to acceptable stability levels.
+
+The average daily change reduction of 38.6\% represents dramatic operational improvement. 
+This reduction directly addresses the core weakness identified in Section 5: excessive day-to-day volatility 
+that renders baseline PDs unusable for risk management.
+
+\subsubsection{Statistical Summary}
+
+The improvements demonstrate consistent patterns across all firms. We see CV reductions ranging from 14.5--20.3\%, with no firm showing less than 14\% improvement.
+We also see daily change reductions ranging from 25.2--49.7\%, with all firms exceeding 25\% improvement. A case specific highlight is AAPL achieving the best CV reduction of 20.3\%,
+demonstrating that smoothing is particularly effective for low-risk firms where baseline noise-to-signal ratios are highest. 
+Another highlight is Tesla, achieving the best mean daily PD change reduction of 49.7\%, where smoothing cuts noise caused by high-frequency price movements
+(often driven by news and sentiment which makes sense for a growth stock),  that often obscure underlying credit quality trends. All in all, 
+the constency of improvement across all five firms exemplify that exponential smoothing provides systematic benefits regardless of baseline risk level.
+
+\subsubsection{Visual Comparison}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.80\textwidth]{comparison_all_firms_pd.png}
+\caption{Raw vs Improved Default Probability—All Firms. \\Thin lines show baseline (raw) PD. Thick lines show improved (smoothed) PD.}
+\label{fig:comparison_all}
+\end{figure}
+
+Figure 3 provides visual evidence of the improvement across all five firms. 
+The thin lines (baseline) show the excessive daily oscillations documented in Section 5, 
+while the thick lines (improved) demonstrate smoother trajectories that preserve important credit signals.
+
+The COVID crisis spike (March--April 2020) remains  
+visible in all improved PDs, but with more realistic recovery 
+patterns. While the baseline model shows extreme spikes that reverse within 
+2 to 3 months through rapid oscillation, the improved model shows more 
+gradual PD declines through mid-2020 with smooth, steady trajectories. This 
+is can be best seen in JPM, where the improved model shows a 
+clean downward slope from April through July whereas the baseline oscillates 
+wildly. This response better reflects the reality that credit 
+quality improvements unfold over quarters, not weeks.
+
+Overall, this distinction has important operational implications. The baseline model's 
+sharp reversals that spike dramatically during crisis onset then crashes through 
+volatile oscillations would lead to constant limit adjustment and portfolio 
+rebalancing in response to noise rather than fundamental credit changes. The 
+improved model enables stable risk management decisions while maintaining responsiveness to genuine credit 
+deterioration.
+
+\subsubsection{Cross-Sectional Ranking Preservation}
+
+\begin{table}[H]
+\centering
+\caption{Risk Ranking Preservation: Mean PD Comparison}
+\label{tab:ranking_improved}
+\begin{tabular}{lrrr}
+\toprule
+\textbf{Firm} & \textbf{Baseline Mean PD} & \textbf{Improved Mean PD} & \textbf{Change} \\
+\midrule
+Ford & 6.38\% & 6.50\% & +0.12\%pts \\
+JPM  & 3.90\% & 3.92\% & +0.02\%pts \\
+TSLA & 3.53\% & 3.67\% & +0.14\%pts \\
+XOM  & 0.70\% & 0.69\% & $-$0.01\%pts \\
+AAPL & 0.10\% & 0.10\% & 0.00\%pts \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Table 4 shows us that exponential smoothing preserves cross-sectional risk ranking.
+ The overall average PD for each firm changes minimally (within 0.2 percentage points for all firms), 
+ and the rank ordering remains the same : Ford $>$ JPM $>$ TSLA $>$ XOM $>$ AAPL. 
+ This confirms that the smoothing approach addresses time-series instability without distorting
+  the model's cross-sectional risk assessment. 
+
+\subsection{Why It's Better}
+
+\subsubsection{Addressing the Weakness}
+The baseline model's primary weakness was excessive default probability instability,
+seen through the metrics of high coefficient of variation and large daily PD changes.
+This happens due to two factors. The baseline model amplified small equity price changes into larger asset volatility fluctuations through the  
+non-linear transformations of the Black Scholes call-option formula (as seen in equations 2 to 4)
+leading to the unstable PD estimates. High debt-to-equity ratios amplify asset volatility into equity volatility via equation (5). For highly levered firms 
+like Ford, equity is highly sensitive to asset value changes, meaning small asset movements create large equity price swings (Merton 1974). 
+By applying exponential smoothing (equation 10), we reduce the impact of these amplified high-frequency fluctuations, leading to more stable PD estimates.
+
+\subsubsection{Economic Interpretation}
+
+The improvement results have clear economic meaning rooted in the fundamental difference 
+between credit quality changes and equity price movements. Credit quality evolves gradually 
+over quarters or years as firms have changes through revenue trends, balance sheet 
+adjustments, and industry conditions. Whereas equity prices fluctuate daily due to market 
+microstructure effects like bid-ask bounce, order flow, sentiment shifts, and liquidity 
+shocks. The baseline Merton model inherently conflates these phenomena, by treating all equity price 
+movements as credit signals which in turn produces PD estimates that show market noise rather than 
+underlying credit fundamentals. Exponential smoothing recognizes this distinction by 
+averaging over recent observations with exponentially decaying weights (equation 11), the 
+improved model filters short-term equity price noise while preserving longer-term trends.
+The empirical results validate this interpretation across different market regimes. 
+This is best seen in the COVID crisis where the improved model's more measured response and gradual recovery better 
+reflect economic reality where credit quality improvements unfold over quarters as balance sheets 
+strengthen and cash flows recover. The 38.6\% 
+reduction in mean daily PD change (Table 3) shows that estimates transitioned from operationally unusable 
+to viable, enabling consistent limit monitoring, stable capital allocation, and reliable 
+credit pricing without the constant adjustments and false alarms generated by baseline 
+volatility. 
+
+
+\section{Limitations}
+
+While exponential smoothing addresses time-series instability, several limitations remain. 
+ The smoothing parameter 
+($\alpha = 0.1$) creates a bias-variance tradeoff where heavier smoothing reduces volatility 
+but introduces lag, potentially delaying response to genuine rapid deterioration. Quarterly 
+debt data with forward-fill may miss sudden leverage changes during crises. Finally, 
+smoothing effectiveness depends on noise-to-signal ratios; for firms experiencing genuine 
+rapid credit changes, smoothing could dampen valid signals. Future work could address these 
+through first-passage time models, stochastic volatility, or adaptive smoothing parameters.
+
+\section{Conclusion}
+
+This report implements the Merton (1974) structural credit model, diagnoses PD instability as an issue
+, and improves stability through exponential smoothing. The improved model achieves an average 16.5\% CV reduction 
+and average 38.6\% daily change reduction while preserving cross-sectional risk ranking. The key insight we see
+is that credit quality evolves over quarters whereas equity prices fluctuate daily. Smoothing filters 
+market noise and preserves credit signals as seen in the COVID crisis response 
+and stable non-crisis estimates. The improvement transforms unusable volatility into 
+operationally viable risk management inputs. 
+As mentioned previously, future work could explore structural improvements (first-passage time models, stochastic volatility) 
+or adaptive smoothing parameters responsive to market conditions.
 
 \end{document}
 
