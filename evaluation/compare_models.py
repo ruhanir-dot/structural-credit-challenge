@@ -128,7 +128,7 @@ def plot_all_firms_pd(naive, improved):
 
 def compare_improvement_metrics(naive, improved):
     """
-    Compare improvement metrics for Table 2.
+    Compare improvement metrics.
     
     Calculates:
     1. Coefficient of Variation (CV = σ/μ)
@@ -136,7 +136,7 @@ def compare_improvement_metrics(naive, improved):
     3. Reduction percentages for both metrics
     """
     print("\n" + "="*60)
-    print("Improvement Metrics for table 2")
+    print("Improvement Metrics")
     print("="*60)
     
     # calculate coefficient of variation st.dev/mean
