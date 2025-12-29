@@ -14,7 +14,7 @@
 \title{Technical Report: Merton Structural Credit Model \\
 \large{with Exponential Smoothing Improvement}}
 \author{Ruhani Rekhi}
-\date{December 25, 2025}
+\date{December 29, 2025}
 \begin{document}
 \maketitle
 \section{Introduction}
@@ -105,12 +105,12 @@ introducing model risk from additional assumptions.
 
 
 The exponential weighted moving average (EWMA), the smoothing formula we are using, has the following properties.
-\begin{itemize}
+\begin{enumerate}
     \item Parameter $\alpha$ controls reactivity: lower $\alpha$ yields more smoothing
     \item No look-ahead bias (uses only past observations)
     \item Preserves long-term trends while filtering short-term noise
     \item Weights decay exponentially: observation $k$ periods ago has weight $\alpha(1-\alpha)^k$
-\end{itemize}
+\end{enumerate}
 
 Diving into the math, property 1 of the EWMA smoothing formula which is equation (10) can be demonstrated by unrolling the recursion:
 \begin{equation}
@@ -240,6 +240,37 @@ While this generally holds for stable periods, this assumption may be
 violated during crisis periods such as the March 2020 COVID crisis which is captured in our data.
 However, most of the variation we see in debt-to-equity ratios stems from equity price changes rather than debt changes which in turn limits the impact of this approximation.
 
+\subsubsection{Debt Data Collection}
+
+To have proper calibration throughout 2020, we collected year-end total debt data for 
+December 31, 2019 and December 31, 2020 from official SEC 10-K annual filings for all firms. 
+Total debt is defined as the sum of all current and non-current debt obligations, 
+including short-term borrowings, the current portion of long-term debt, and long-term debt.
+For firms operating financing subsidiaries (Ford Motor Credit), consolidated debt includes 
+both automotive and financing operations. For Apple, we use fiscal year-end data (September 28, 2019) 
+supplemented by first fiscal quarter data, as Apple's fiscal year ends in September rather than December. 
+All debt values are extracted from audited consolidated balance sheets filed with the U.S. Securities 
+and Exchange Commission as well as other external sources and are reported in millions of USD. Table~\ref{tab:debt_yearend} presents 
+the debt data used in our analysis.
+
+\begin{table}[htbp]
+\centering
+\caption{Total Estimated Debt at December 31 for 2019 and 2020}
+\label{tab:debt_yearend}
+\begin{tabular}{lccccc}
+\hline\hline
+\textbf{Firm} & \textbf{Dec 31, 2019} & \textbf{Dec 31, 2020} & \textbf{Change}  \\
+              & \textbf{(\$M)} & \textbf{(\$M)} & \textbf{(\$M)} \\
+\hline
+AAPL & 108,047 & 132,480 & +24,433 \\
+JPM  & 324,609 & 354,599 & +29,990 \\
+TSLA & 13,419  & 8,873   & $-$4,546 \\
+XOM  & 53,257  & 47,704  & $-$5,553 \\
+F    & 155,017 & 139,485 & $-$15,532  \\
+\hline\hline
+\end{tabular}
+\end{table}
+
 \subsubsection{Additional Assumptions}
 \begin{itemize}
     \item Dividends ignored for simplicity
@@ -348,34 +379,34 @@ Table 3 presents the stability improvements achieved through exponential smoothi
 \cmidrule(lr){2-4} \cmidrule(lr){5-7}
 \textbf{Firm} & \textbf{Baseline} & \textbf{Improved} & \textbf{Reduction} & \textbf{Baseline} & \textbf{Improved} & \textbf{Reduction} \\
 \midrule
-AAPL & 3.03 & 2.41 & $\downarrow$20.3\% & 0.012 & 0.008 & $\downarrow$33.8\% \\
-JPM  & 2.22 & 1.89 & $\downarrow$14.9\% & 0.303 & 0.226 & $\downarrow$25.2\% \\
-TSLA & 1.72 & 1.47 & $\downarrow$14.5\% & 0.320 & 0.161 & $\downarrow$49.7\% \\
-XOM  & 2.52 & 2.10 & $\downarrow$16.5\% & 0.086 & 0.047 & $\downarrow$45.1\% \\
-Ford & 1.69 & 1.42 & $\downarrow$16.2\% & 0.488 & 0.297 & $\downarrow$39.1\% \\
+AAPL & 3.03 & 2.43 & $\downarrow$19.6\% & 0.012 & 0.005 & $\downarrow$56.5\% \\
+JPM  & 2.22 & 1.91 & $\downarrow$14.0\% & 0.303 & 0.220 & $\downarrow$27.4\% \\
+TSLA & 1.72 & 1.33 & $\downarrow$22.8\% & 0.320 & 0.208 & $\downarrow$34.9\% \\
+XOM  & 2.52 & 2.06 & $\downarrow$18.1\% & 0.086 & 0.053 & $\downarrow$38.4\% \\
+Ford & 1.69 & 1.41 & $\downarrow$16.6\% & 0.488 & 0.300 & $\downarrow$38.5\% \\
 \midrule
-\textbf{Avg} & \textbf{2.23} & \textbf{1.86} & $\bm{\downarrow}$\textbf{16.5\%} & \textbf{0.242} & \textbf{0.148} & $\bm{\downarrow}$\textbf{38.6\%} \\
+\textbf{Avg} & \textbf{2.23} & \textbf{1.83} & $\bm{\downarrow}$\textbf{18.2\%} & \textbf{0.242} & \textbf{0.157} & $\bm{\downarrow}$\textbf{39.1\%} \\
 \bottomrule
 \end{tabular}
 \end{table}
 
 The improved model achieves substantial stability improvement across both our metrics. 
-The average CV reduction of 16.5\%  demonstrates systematic improvement 
+The average CV reduction of 18.2\%  demonstrates systematic improvement 
 in relative volatility across all firms. While all firms still exceed CV = 1.0, the improved model 
 brings them substantially closer to acceptable stability levels.
 
-The average daily change reduction of 38.6\% represents dramatic operational improvement. 
+The average daily change reduction of 39.1\% represents dramatic operational improvement. 
 This reduction directly addresses the core weakness identified in Section 5: excessive day-to-day volatility 
 that renders baseline PDs unusable for risk management.
 
 \subsubsection{Statistical Summary}
 
-The improvements demonstrate consistent patterns across all firms. We see CV reductions ranging from 14.5--20.3\%, with no firm showing less than 14\% improvement.
-We also see daily change reductions ranging from 25.2--49.7\%, with all firms exceeding 25\% improvement. A case specific highlight is AAPL achieving the best CV reduction of 20.3\%,
-demonstrating that smoothing is particularly effective for low-risk firms where baseline noise-to-signal ratios are highest. 
-Another highlight is Tesla, achieving the best mean daily PD change reduction of 49.7\%, where smoothing cuts noise caused by high-frequency price movements
-(often driven by news and sentiment which makes sense for a growth stock),  that often obscure underlying credit quality trends. All in all, 
-the constency of improvement across all five firms exemplify that exponential smoothing provides systematic benefits regardless of baseline risk level.
+The improvements demonstrate consistent patterns across all firms. We see CV reductions ranging from 14.0--22.8\%, with no firm showing less than 14\% improvement.
+We also see daily change reductions ranging from 27.4--56.5\%, with all firms exceeding 27\% improvement. A case specific highlight is TSLA achieving the best CV reduction of 22.8\%,
+demonstrating that smoothing is particularly effective for high-volatility growth stocks where baseline noise-to-signal ratios are elevated due to frequent news-driven price movements. 
+Another highlight is AAPL, achieving the best mean daily PD change reduction of 56.5\%, where smoothing dramatically cuts noise for low-risk firms where small absolute price movements
+create large percentage changes in PD estimates that obscure the firm's stable underlying credit quality. All in all, 
+the consistency of improvement across all five firms exemplifies that exponential smoothing provides systematic benefits regardless of baseline risk level.
 
 \subsubsection{Visual Comparison}
 
@@ -398,7 +429,9 @@ gradual PD declines through mid-2020 with smooth, steady trajectories. This
 is can be best seen in JPM, where the improved model shows a 
 clean downward slope from April through July whereas the baseline oscillates 
 wildly. This response better reflects the reality that credit 
-quality improvements unfold over quarters, not weeks.
+quality improvements unfold over quarters, not weeks. For Tesla,
+we see that the improved model shows maintained elevated PD levels through mid-2020
+revealing the firm's underlying risk more clearly.
 
 Overall, this distinction has important operational implications. The baseline model's 
 sharp reversals that spike dramatically during crisis onset then crashes through 
@@ -407,30 +440,37 @@ rebalancing in response to noise rather than fundamental credit changes. The
 improved model enables stable risk management decisions while maintaining responsiveness to genuine credit 
 deterioration.
 
-\subsubsection{Cross-Sectional Ranking Preservation}
+\subsubsection{Cross-Sectional Ranking Changes}
 
 \begin{table}[H]
 \centering
-\caption{Risk Ranking Preservation: Mean PD Comparison}
+\caption{Risk Ranking Comparison: Mean PD by Model}
 \label{tab:ranking_improved}
 \begin{tabular}{lrrr}
 \toprule
 \textbf{Firm} & \textbf{Baseline Mean PD} & \textbf{Improved Mean PD} & \textbf{Change} \\
 \midrule
-Ford & 6.38\% & 6.50\% & +0.12\%pts \\
-JPM  & 3.90\% & 3.92\% & +0.02\%pts \\
-TSLA & 3.53\% & 3.67\% & +0.14\%pts \\
-XOM  & 0.70\% & 0.69\% & $-$0.01\%pts \\
-AAPL & 0.10\% & 0.10\% & 0.00\%pts \\
+Ford & 6.38\% & 6.58\% & +0.20\%pts \\
+TSLA & 3.53\% & 5.23\% & +1.70\%pts \\
+JPM  & 3.90\% & 3.77\% & $-$0.13\%pts \\
+XOM  & 0.70\% & 0.79\% & +0.09\%pts \\
+AAPL & 0.10\% & 0.06\% & $-$0.04\%pts \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-Table 4 shows us that exponential smoothing preserves cross-sectional risk ranking.
- The overall average PD for each firm changes minimally (within 0.2 percentage points for all firms), 
- and the rank ordering remains the same : Ford $>$ JPM $>$ TSLA $>$ XOM $>$ AAPL. 
- This confirms that the smoothing approach addresses time-series instability without distorting
-  the model's cross-sectional risk assessment. 
+Table 4 shows that exponential smoothing causes a cross-sectional ranking change.
+While Ford remains the highest-risk firm and AAPL the lowest, Tesla and JPMorgan swap positions:
+the baseline model ranks JPM as higher risk (3.90\%) than TSLA (3.53\%), but the improved model 
+reverses this to TSLA (5.23\%) $>$ JPM (3.77\%). This 1.7 percentage point increase in Tesla's 
+mean PD reflects smoothing's different impact on firms with distinct volatility characteristics.
+Tesla's high equity volatility and news-driven price swings create baseline PD estimates that 
+oscillate rapidly around a higher true credit risk level. Smoothing removes these oscillations hence
+revealing Tesla's elevated underlying risk. Whereas, JPMorgan's more stable 
+equity prices produce baseline PDs that already reflect its credit quality reasonably well,
+so smoothing produces minimal change. This ranking shift demonstrates that while smoothing 
+reduces time-series instability systematically, it can alter cross-sectional risk assessment 
+when baseline models differently distort estimates across firms with varying volatility profiles.
 
 \subsection{Why It's Better}
 
@@ -458,7 +498,7 @@ improved model filters short-term equity price noise while preserving longer-ter
 The empirical results validate this interpretation across different market regimes. 
 This is best seen in the COVID crisis where the improved model's more measured response and gradual recovery better 
 reflect economic reality where credit quality improvements unfold over quarters as balance sheets 
-strengthen and cash flows recover. The 38.6\% 
+strengthen and cash flows recover. The 39.1\% 
 reduction in mean daily PD change (Table 3) shows that estimates transitioned from operationally unusable 
 to viable, enabling consistent limit monitoring, stable capital allocation, and reliable 
 credit pricing without the constant adjustments and false alarms generated by baseline 
@@ -471,16 +511,18 @@ While exponential smoothing addresses time-series instability, several limitatio
  The smoothing parameter 
 ($\alpha = 0.1$) creates a bias-variance tradeoff where heavier smoothing reduces volatility 
 but introduces lag, potentially delaying response to genuine rapid deterioration. Quarterly 
-debt data with forward-fill may miss sudden leverage changes during crises. Finally, 
-smoothing effectiveness depends on noise-to-signal ratios; for firms experiencing genuine 
+debt data with forward-fill may miss sudden leverage changes during crises. The ranking change between Tesla and JPMorgan (Table 4) illustrates that smoothing
+can alter cross-sectional risk assessment when firms have different volatility characteristics,
+raising questions about whether the smoothed or baseline ranking better reflects true credit
+risk.  Finally, smoothing effectiveness depends on noise-to-signal ratios; for firms experiencing genuine 
 rapid credit changes, smoothing could dampen valid signals. Future work could address these 
 through first-passage time models, stochastic volatility, or adaptive smoothing parameters.
 
 \section{Conclusion}
 
 This report implements the Merton (1974) structural credit model, diagnoses PD instability as an issue
-, and improves stability through exponential smoothing. The improved model achieves an average 16.5\% CV reduction 
-and average 38.6\% daily change reduction while preserving cross-sectional risk ranking. The key insight we see
+, and improves stability through exponential smoothing. The improved model achieves an average 18.2\% CV reduction 
+and average 39.1\% daily change reduction while generally preserving credit risk differentiation across firms. The key insight we see
 is that credit quality evolves over quarters whereas equity prices fluctuate daily. Smoothing filters 
 market noise and preserves credit signals as seen in the COVID crisis response 
 and stable non-crisis estimates. The improvement transforms unusable volatility into 

@@ -85,20 +85,25 @@ def main():
         firm_rf = risk_free
 
         if USE_REAL_DATA:
-            # real data use merge_asof for proper forward-fill
-            # debt dates may not overlap with equity dates
-            equity_dates = pd.Series(firm_equity['date'].unique()).sort_values()
-            firm_debt_daily = pd.merge_asof(
-                pd.DataFrame({'date': equity_dates}),
-                firm_debt_quarterly[['date', 'debt']].sort_values('date'),
-                on='date',
-                direction='forward'  # forward fill using most recent debt
-            )
-            # backfill for dates before first debt date
-            if firm_debt_daily['debt'].isna().any():
-                firm_debt_daily['debt'] = firm_debt_daily['debt'].bfill()
+            # filter debt data for current firm
+            firm_debt_quarterly = debt[debt['firm_id'] == firm_id]
+
+            if len(firm_debt_quarterly) == 0:
+                print(f"Warning: No debt data for firm {firm_id}")
+                equity_dates = pd.Series(firm_equity['date'].unique()).sort_values()
+                firm_debt_daily = pd.DataFrame({'date': equity_dates, 'debt': np.nan})
+            else:
+                equity_dates = pd.Series(firm_equity['date'].unique()).sort_values()
+                firm_debt_sorted = firm_debt_quarterly[['date', 'debt']].sort_values('date')
+                firm_debt_daily = pd.merge_asof(
+                    pd.DataFrame({'date': equity_dates}),
+                    firm_debt_sorted,
+                    on='date',
+                    direction='backward'
+                )
+                firm_debt_daily['debt'] = firm_debt_daily['debt'].ffill()
         else:
-            # synthetic data multiple quarterly values
+            # synthetic data
             firm_debt_daily = firm_debt_quarterly.set_index('date')['debt'].reindex(
                 firm_equity['date'].unique(),
                 method='ffill'

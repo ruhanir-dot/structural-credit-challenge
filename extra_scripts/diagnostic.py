@@ -61,7 +61,7 @@ for i, (firm, color) in enumerate(zip(firms, colors)):
     ax.legend(loc='upper right', fontsize=9)
 
 
-plt.savefig('/Users/ruhanirekhi/Documents/structural-credit-challenge/outputs/pd_instability_timeseries.png', 
+plt.savefig('outputs/pd_instability_timeseries.png', 
             dpi=300, bbox_inches='tight')
 
 
@@ -138,5 +138,5 @@ ax.legend(loc='upper right', fontsize=9)
 ax.grid(True, alpha=0.3, axis='y')
 
 plt.tight_layout()
-plt.savefig('/Users/ruhanirekhi/Documents/structural-credit-challenge/outputs/pd_instability_metrics.png', 
+plt.savefig('outputs/pd_instability_metrics.png', 
             dpi=300, bbox_inches='tight')
