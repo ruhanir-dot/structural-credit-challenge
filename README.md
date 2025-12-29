@@ -1,6 +1,41 @@
 # Structural Credit Modeling Take-Home  
 **Black–Scholes Applied to Corporate Liabilities**
 
+## Overview
+
+This take-home exercise evaluates your ability to reason about financial models **beyond textbook usage**.
+
+You will build a simple structural credit model, apply it to real firm data, diagnose where it fails, and implement a **minimal, principled improvement** supported by empirical evidence.
+
+This is **not** a test of formula memorization or software scale.
+We care most about:
+
+- Modeling judgment *(the art of knowing when to bend the rules)*
+- Numerical discipline
+- Empirical reasoning
+- Clarity of technical communication
+
+
+## Objective
+
+You are asked to:
+
+1. Implement a **baseline structural credit model** (Merton, 1974) in which a firm's equity is modeled as a call option on its assets.
+2. Calibrate **unobservable firm asset value and asset volatility** using observable equity prices, equity volatility, debt, and risk-free rates.
+3. Apply the model to real firms and **identify systematic weaknesses** in its behavior.
+4. Propose and implement **one minimal, well-justified model improvement**.
+5. Demonstrate quantitatively that the improved model performs better than the baseline under a clearly defined evaluation criterion.
+6. Clearly document assumptions, methodology, results, and limitations in a concise technical report.
+
+
+### Improvement Implemented
+
+In this submission the chosen, minimal improvement is a time-series smoothing step applied to the model-implied default probabilities (PDs). Concretely:
+
+- Location: `improved/__main__.py` (the improved pipeline) computes raw PDs using the baseline calibration and then applies exponential smoothing to produce `PD_smoothed`.
+- Parameter: the smoothing intensity is controlled by the variable `SMOOTHING_ALPHA` in `improved/__main__.py` (default shown in the script and used for report is `0.1`). You can change this value in the file to test different smoothing strengths.
+- Output: the improved pipeline writes `outputs/improved_model_results.csv` with both the raw PD (`PD_raw`) and the smoothed PD (`PD_smoothed`) columns.
+
 ## Quick run (minimal)
 
 Follow these steps to run the baseline and improved pipelines quickly. These commands assume you are in the repository root and have `conda` or `python` available.
@@ -31,43 +66,7 @@ python -m improved
 python evaluation/compare_models.py outputs/naive_model_results.csv outputs/improved_model_results.csv
 ```
 
-If you want to tweak the smoothing parameter used by the improved pipeline, edit `SMOOTHING_ALPHA` in `improved/__main__.py` or run the script after we add a CLI flag for `--alpha` (I can add that for you).
-
-## Overview
-
-This take-home exercise evaluates your ability to reason about financial models **beyond textbook usage**.
-
-You will build a simple structural credit model, apply it to real firm data, diagnose where it fails, and implement a **minimal, principled improvement** supported by empirical evidence.
-
-This is **not** a test of formula memorization or software scale.
-We care most about:
-
-- Modeling judgment *(the art of knowing when to bend the rules)*
-- Numerical discipline
-- Empirical reasoning
-- Clarity of technical communication
-
----
-
-## Objective
-
-You are asked to:
-
-1. Implement a **baseline structural credit model** (Merton, 1974) in which a firm's equity is modeled as a call option on its assets.
-2. Calibrate **unobservable firm asset value and asset volatility** using observable equity prices, equity volatility, debt, and risk-free rates.
-3. Apply the model to real firms and **identify systematic weaknesses** in its behavior.
-4. Propose and implement **one minimal, well-justified model improvement**.
-5. Demonstrate quantitatively that the improved model performs better than the baseline under a clearly defined evaluation criterion.
-6. Clearly document assumptions, methodology, results, and limitations in a concise technical report.
-
----
-### Improvement Implemented
-
-In this submission the chosen, minimal improvement is a time-series smoothing step applied to the model-implied default probabilities (PDs). Concretely:
-
-- Location: `improved/__main__.py` (the improved pipeline) computes raw PDs using the baseline calibration and then applies exponential smoothing to produce `PD_smoothed`.
-- Parameter: the smoothing intensity is controlled by the variable `SMOOTHING_ALPHA` in `improved/__main__.py` (default shown in the script and used for report is `0.1`). You can change this value in the file to test different smoothing strengths.
-- Output: the improved pipeline writes `outputs/improved_model_results.csv` with both the raw PD (`PD_raw`) and the smoothed PD (`PD_smoothed`) columns.
+If you want to tweak the smoothing parameter used by the improved pipeline, edit `SMOOTHING_ALPHA` in `improved/__main__.py`.
 
 
 
