@@ -1,6 +1,38 @@
 # Structural Credit Modeling Take-Home  
 **Black–Scholes Applied to Corporate Liabilities**
 
+## Quick run (minimal)
+
+Follow these steps to run the baseline and improved pipelines quickly. These commands assume you are in the repository root and have `conda` or `python` available.
+
+1. Create and activate a Python environment and install dependencies:
+
+```bash
+conda create -n quant_takehome python=3.9 -y
+conda activate quant_takehome
+pip install -r requirements.txt
+```
+
+2. Run the baseline starter pipeline:
+
+```bash
+python -m naive_model
+```
+
+3. Run the improved pipeline (writes `outputs/improved_model_results.csv`):
+
+```bash
+python -m improved
+```
+
+4. Compare results (example):
+
+```bash
+python evaluation/compare_models.py outputs/naive_model_results.csv outputs/improved_model_results.csv
+```
+
+If you want to tweak the smoothing parameter used by the improved pipeline, edit `SMOOTHING_ALPHA` in `improved/__main__.py` or run the script after we add a CLI flag for `--alpha` (I can add that for you).
+
 ## Overview
 
 This take-home exercise evaluates your ability to reason about financial models **beyond textbook usage**.
@@ -29,6 +61,15 @@ You are asked to:
 6. Clearly document assumptions, methodology, results, and limitations in a concise technical report.
 
 ---
+### Improvement Implemented
+
+In this submission the chosen, minimal improvement is a time-series smoothing step applied to the model-implied default probabilities (PDs). Concretely:
+
+- Location: `improved/__main__.py` (the improved pipeline) computes raw PDs using the baseline calibration and then applies exponential smoothing to produce `PD_smoothed`.
+- Parameter: the smoothing intensity is controlled by the variable `SMOOTHING_ALPHA` in `improved/__main__.py` (default shown in the script and used for report is `0.1`). You can change this value in the file to test different smoothing strengths.
+- Output: the improved pipeline writes `outputs/improved_model_results.csv` with both the raw PD (`PD_raw`) and the smoothed PD (`PD_smoothed`) columns.
+
+
 
 ## Background (Conceptual)
 
