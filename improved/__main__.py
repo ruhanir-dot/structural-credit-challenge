@@ -77,7 +77,7 @@ def main():
         firm_rf = risk_free
 
         if USE_REAL_DATA:
-            # Filter debt data for current firm
+            # filter debt data for current firm
             firm_debt_quarterly = debt[debt['firm_id'] == firm_id]
 
             if len(firm_debt_quarterly) == 0:

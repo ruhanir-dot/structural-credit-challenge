@@ -294,32 +294,33 @@ Table~\ref{tab:baseline_metrics} summarizes the stability metrics for the baseli
 \toprule
 \textbf{Firm} & \textbf{Mean PD} & \textbf{Std Dev} & \textbf{CV} \\
 \midrule
-AAPL & 0.10\% & 0.30\% & 3.03 \\
-JPM  & 3.90\% & 8.64\% & 2.22 \\
-TSLA & 3.53\% & 6.07\% & 1.72 \\
-XOM  & 0.70\% & 1.75\% & 2.52 \\
-Ford & 6.38\% & 10.78\% & 1.69 \\
+AAPL & 0.06\% & 0.20\% & 3.08 \\
+JPM  & 3.75\% & 8.40\% & 2.24 \\
+TSLA & 5.01\% & 7.75\% & 1.55 \\
+XOM  & 0.80\% & 1.96\% & 2.46 \\
+Ford & 6.46\% & 10.86\% & 1.68 \\
 \bottomrule
 \end{tabular}
 \end{table}
 \paragraph{High Coefficient of Variation:} 
-All firms exhibit CV between 1.69 and 3.03, indicating that standard 
-deviation is 1.7 to 3 times the mean PD. While no universal CV threshold 
+All firms exhibit CV between 1.55 and 3.08, indicating that standard 
+deviation is 1.6 to 3.1 times the mean PD. While no universal CV threshold 
 exists in credit risk practice, CV values exceeding 1.0 indicate 
 standard deviation exceeds the mean, representing a high noise-to-signal 
 ratio in this context making it unsuitable for operational risk management.
 \paragraph{Universal Instability Pattern} 
 The instability problem in Table~\ref{tab:baseline_metrics} affects all firms 
 regardless of risk level or leverage. Both the highest-risk firm 
-(Ford, 6.38\% mean PD) and the lowest-risk firm (AAPL, 0.10\% mean PD) 
+(Ford, 6.46\% mean PD) and the lowest-risk firm (AAPL, 0.06\% mean PD) 
 exhibit CV values substantially exceeding 1.0. This suggests an issue with the model 
-structure rather than firm-specific calibration problems. Notably, AAPL produces the highest relative volatility ($CV = 3.03$) despite 
+structure rather than firm-specific calibration problems. Notably, AAPL produces the highest relative volatility ($CV = 3.08$) despite 
 having minimal default risk, exemplifying perhaps that the baseline model's 
 instability worsens for low-risk firms where small changes create 
 large percentage swings. The consistency of $CV > 1.0$ across all firms confirm
 that the baseline implementation produces estimates where noise dominates signal.
 \paragraph{Root Cause Analysis}
 The baseline Merton model amplifies equity volatility through non-linear transformations and leverage effects, leading to unstable PD estimates !
+
 
 \subsection{Examples}
 
@@ -331,8 +332,8 @@ The baseline Merton model amplifies equity volatility through non-linear transfo
 \end{figure}
 
 All five firms exhibit extreme PD spikes during the COVID-19 crisis 
-(March--April 2020, shaded region), with peak increases of 6--14 times their annual mean values. For example we see that Ford reaches 40\% PD (6.3× its mean), 
-JPMorgan peaks at 32\% (8.2× its mean), and even low-risk AAPL spikes to 1.4\% (14× its mean).
+(March--April 2020, shaded region), with peak increases of 6--23 times their annual mean values. For example we see that Ford reaches 40\% PD (6.2× its mean), 
+JPMorgan peaks at 32\% (8.5× its mean), and even low-risk AAPL spikes to 1.4\% (23× its mean).
 Additionally, these spikes reverse rapidly almost within 2-4 months which is inconsistent with typical credit cycles where rating changes occur over quarters 
 and defaults unfold over years!
 
@@ -345,12 +346,12 @@ and defaults unfold over years!
 Figure~\ref{fig:baseline_metrics} provides quantitative evidence of the instability problem through two metrics. 
 The left panel shows that all firms exceed a CV of 1.0, indicating standard deviation exceeds the mean for all cases (operationally unacceptable, explained in further detail above).
 The right panel reveals extreme single-day PD movements, with four out of five firms  exceeding the 2 percentage point reference line for operational viability. Ford's
-20.3 percentage point single-day jump is almost 10 times this reference magnitude, while JPMorgan and Tesla show 7--8 percentage point jumps. 
+20.5 percentage point single-day jump is almost 10 times this reference magnitude, while JPMorgan and Tesla show 7--8 percentage point jumps. 
 These sort of extreme movements exemplify crisis amplification. Moreover, the contrasting patterns between panels reveal an important distinction between 
-relative and absolute instability. Low-risk firms (AAPL, XOM) suffer from high relative volatility (CV $>$ 2.5) where noise dominates signal whereas 
-high-risk firms (Ford, JPM, TSLA) suffer from large absolute movements ranging from 7.5 to 20.3 percentage points. 
+relative and absolute instability. Low-risk firms (AAPL, XOM) suffer from high relative volatility (CV $>$ 2.4) where noise dominates signal whereas 
+high-risk firms (Ford, JPM, TSLA) suffer from large absolute movements ranging from 7.7 to 20.5 percentage points. 
 Both forms of instability are problematic for risk management as they lead to unreliable PD estimates that cannot be used for portfolio monitoring or capital allocation.
-Even the best-performing case (XOM with CV = 2.52 and max jump = 2.3\%pts) exceeds our reference thresholds, 
+Even the best-performing case (XOM with CV = 2.46 and max jump = 2.5\%pts) exceeds our reference thresholds, 
 indicating no firm in the sample produces baseline estimates suitable for risk management without smoothing. 
 
 \section{Improved Model Results}
@@ -379,33 +380,33 @@ Table 3 presents the stability improvements achieved through exponential smoothi
 \cmidrule(lr){2-4} \cmidrule(lr){5-7}
 \textbf{Firm} & \textbf{Baseline} & \textbf{Improved} & \textbf{Reduction} & \textbf{Baseline} & \textbf{Improved} & \textbf{Reduction} \\
 \midrule
-AAPL & 3.03 & 2.43 & $\downarrow$19.6\% & 0.012 & 0.005 & $\downarrow$56.5\% \\
-JPM  & 2.22 & 1.91 & $\downarrow$14.0\% & 0.303 & 0.220 & $\downarrow$27.4\% \\
-TSLA & 1.72 & 1.33 & $\downarrow$22.8\% & 0.320 & 0.208 & $\downarrow$34.9\% \\
-XOM  & 2.52 & 2.06 & $\downarrow$18.1\% & 0.086 & 0.053 & $\downarrow$38.4\% \\
-Ford & 1.69 & 1.41 & $\downarrow$16.6\% & 0.488 & 0.300 & $\downarrow$38.5\% \\
+AAPL & 3.08 & 2.43 & $\downarrow$21.0\% & 0.008 & 0.005 & $\downarrow$35.3\% \\
+JPM  & 2.24 & 1.91 & $\downarrow$15.0\% & 0.293 & 0.220 & $\downarrow$25.0\% \\
+TSLA & 1.55 & 1.33 & $\downarrow$14.2\% & 0.406 & 0.208 & $\downarrow$48.7\% \\
+XOM  & 2.46 & 2.06 & $\downarrow$16.2\% & 0.097 & 0.053 & $\downarrow$45.3\% \\
+Ford & 1.68 & 1.41 & $\downarrow$16.2\% & 0.493 & 0.300 & $\downarrow$39.1\% \\
 \midrule
-\textbf{Avg} & \textbf{2.23} & \textbf{1.83} & $\bm{\downarrow}$\textbf{18.2\%} & \textbf{0.242} & \textbf{0.157} & $\bm{\downarrow}$\textbf{39.1\%} \\
+\textbf{Avg} & \textbf{2.20} & \textbf{1.83} & $\bm{\downarrow}$\textbf{16.5\%} & \textbf{0.259} & \textbf{0.157} & $\bm{\downarrow}$\textbf{38.7\%} \\
 \bottomrule
 \end{tabular}
 \end{table}
 
 The improved model achieves substantial stability improvement across both our metrics. 
-The average CV reduction of 18.2\%  demonstrates systematic improvement 
+The average CV reduction of 16.5\%  demonstrates systematic improvement 
 in relative volatility across all firms. While all firms still exceed CV = 1.0, the improved model 
 brings them substantially closer to acceptable stability levels.
 
-The average daily change reduction of 39.1\% represents dramatic operational improvement. 
+The average daily change reduction of 38.7\% represents dramatic operational improvement. 
 This reduction directly addresses the core weakness identified in Section 5: excessive day-to-day volatility 
 that renders baseline PDs unusable for risk management.
 
 \subsubsection{Statistical Summary}
 
-The improvements demonstrate consistent patterns across all firms. We see CV reductions ranging from 14.0--22.8\%, with no firm showing less than 14\% improvement.
-We also see daily change reductions ranging from 27.4--56.5\%, with all firms exceeding 27\% improvement. A case specific highlight is TSLA achieving the best CV reduction of 22.8\%,
-demonstrating that smoothing is particularly effective for high-volatility growth stocks where baseline noise-to-signal ratios are elevated due to frequent news-driven price movements. 
-Another highlight is AAPL, achieving the best mean daily PD change reduction of 56.5\%, where smoothing dramatically cuts noise for low-risk firms where small absolute price movements
-create large percentage changes in PD estimates that obscure the firm's stable underlying credit quality. All in all, 
+The improvements demonstrate consistent patterns across all firms. We see CV reductions ranging from 14.2--21.0\%, with no firm showing less than 14\% improvement.
+We also see daily change reductions ranging from 25.0--48.7\%, with all firms exceeding 25\% improvement. A case specific highlight is AAPL achieving the best CV reduction of 21.0\%,
+demonstrating that smoothing is particularly effective for low-risk firms where baseline noise-to-signal ratios are highest due to small absolute PD values amplifying percentage variations. 
+Another highlight is TSLA, achieving the best mean daily PD change reduction of 48.7\%, where smoothing cuts noise caused by high-frequency price movements
+(often driven by news and sentiment characteristic of growth stocks) that often obscure underlying credit quality trends. All in all, 
 the consistency of improvement across all five firms exemplifies that exponential smoothing provides systematic benefits regardless of baseline risk level.
 
 \subsubsection{Visual Comparison}
@@ -429,9 +430,7 @@ gradual PD declines through mid-2020 with smooth, steady trajectories. This
 is can be best seen in JPM, where the improved model shows a 
 clean downward slope from April through July whereas the baseline oscillates 
 wildly. This response better reflects the reality that credit 
-quality improvements unfold over quarters, not weeks. For Tesla,
-we see that the improved model shows maintained elevated PD levels through mid-2020
-revealing the firm's underlying risk more clearly.
+quality improvements unfold over quarters, not weeks.
 
 Overall, this distinction has important operational implications. The baseline model's 
 sharp reversals that spike dramatically during crisis onset then crashes through 
@@ -440,39 +439,32 @@ rebalancing in response to noise rather than fundamental credit changes. The
 improved model enables stable risk management decisions while maintaining responsiveness to genuine credit 
 deterioration.
 
-\subsubsection{Cross-Sectional Ranking Changes}
+\subsubsection{Cross-Sectional Ranking Preservation}
 
 \begin{table}[H]
 \centering
-\caption{Risk Ranking Comparison: Mean PD by Model}
+\caption{Risk Ranking Preservation: Mean PD Comparison}
 \label{tab:ranking_improved}
 \begin{tabular}{lrrr}
 \toprule
 \textbf{Firm} & \textbf{Baseline Mean PD} & \textbf{Improved Mean PD} & \textbf{Change} \\
 \midrule
-Ford & 6.38\% & 6.58\% & +0.20\%pts \\
-TSLA & 3.53\% & 5.23\% & +1.70\%pts \\
-JPM  & 3.90\% & 3.77\% & $-$0.13\%pts \\
-XOM  & 0.70\% & 0.79\% & +0.09\%pts \\
-AAPL & 0.10\% & 0.06\% & $-$0.04\%pts \\
+Ford & 6.46\% & 6.58\% & +0.12\%pts \\
+TSLA & 5.01\% & 5.23\% & +0.22\%pts \\
+JPM  & 3.75\% & 3.77\% & +0.02\%pts \\
+XOM  & 0.80\% & 0.79\% & $-$0.01\%pts \\
+AAPL & 0.06\% & 0.06\% & 0.00\%pts \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-Table 4 shows that exponential smoothing causes a cross-sectional ranking change.
-While Ford remains the highest-risk firm and AAPL the lowest, Tesla and JPMorgan swap positions:
-the baseline model ranks JPM as higher risk (3.90\%) than TSLA (3.53\%), but the improved model 
-reverses this to TSLA (5.23\%) $>$ JPM (3.77\%). This 1.7 percentage point increase in Tesla's 
-mean PD reflects smoothing's different impact on firms with distinct volatility characteristics.
-Tesla's high equity volatility and news-driven price swings create baseline PD estimates that 
-oscillate rapidly around a higher true credit risk level. Smoothing removes these oscillations hence
-revealing Tesla's elevated underlying risk. Whereas, JPMorgan's more stable 
-equity prices produce baseline PDs that already reflect its credit quality reasonably well,
-so smoothing produces minimal change. This ranking shift demonstrates that while smoothing 
-reduces time-series instability systematically, it can alter cross-sectional risk assessment 
-when baseline models differently distort estimates across firms with varying volatility profiles.
-
-\subsection{Why It's Better}
+Table 4 demonstrates that exponential smoothing preserves cross-sectional risk ranking.
+The rank ordering remains identical in both models: Ford $>$ TSLA $>$ JPM $>$ XOM $>$ AAPL. 
+The mean PD changes are minimal for all firms (within 0.22 percentage points), 
+confirming that smoothing addresses time-series instability without distorting
+the model's cross-sectional risk assessment. This preservation is crucial for risk management
+applications where consistent firm rankings enable stable credit limits, portfolio allocation,
+and pricing decisions across market conditions.
 
 \subsubsection{Addressing the Weakness}
 The baseline model's primary weakness was excessive default probability instability,
@@ -498,7 +490,7 @@ improved model filters short-term equity price noise while preserving longer-ter
 The empirical results validate this interpretation across different market regimes. 
 This is best seen in the COVID crisis where the improved model's more measured response and gradual recovery better 
 reflect economic reality where credit quality improvements unfold over quarters as balance sheets 
-strengthen and cash flows recover. The 39.1\% 
+strengthen and cash flows recover. The 38.7\% 
 reduction in mean daily PD change (Table 3) shows that estimates transitioned from operationally unusable 
 to viable, enabling consistent limit monitoring, stable capital allocation, and reliable 
 credit pricing without the constant adjustments and false alarms generated by baseline 
@@ -511,18 +503,16 @@ While exponential smoothing addresses time-series instability, several limitatio
  The smoothing parameter 
 ($\alpha = 0.1$) creates a bias-variance tradeoff where heavier smoothing reduces volatility 
 but introduces lag, potentially delaying response to genuine rapid deterioration. Quarterly 
-debt data with forward-fill may miss sudden leverage changes during crises. The ranking change between Tesla and JPMorgan (Table 4) illustrates that smoothing
-can alter cross-sectional risk assessment when firms have different volatility characteristics,
-raising questions about whether the smoothed or baseline ranking better reflects true credit
-risk.  Finally, smoothing effectiveness depends on noise-to-signal ratios; for firms experiencing genuine 
-rapid credit changes, smoothing could dampen valid signals. Future work could address these 
-through first-passage time models, stochastic volatility, or adaptive smoothing parameters.
+debt data with forward-fill may miss sudden leverage changes during crises. Finally, smoothing effectiveness depends on noise-to-signal ratios; for firms 
+experiencing genuine rapid credit changes, smoothing could dampen valid signals. Future 
+work could address these through first-passage time models, stochastic volatility, or 
+adaptive smoothing parameters.
 
 \section{Conclusion}
 
 This report implements the Merton (1974) structural credit model, diagnoses PD instability as an issue
-, and improves stability through exponential smoothing. The improved model achieves an average 18.2\% CV reduction 
-and average 39.1\% daily change reduction while generally preserving credit risk differentiation across firms. The key insight we see
+, and improves stability through exponential smoothing. The improved model achieves an average 16.5\% CV reduction 
+and average 38.7\% daily change reduction while preserving cross-sectional risk ranking. The key insight we see
 is that credit quality evolves over quarters whereas equity prices fluctuate daily. Smoothing filters 
 market noise and preserves credit signals as seen in the COVID crisis response 
 and stable non-crisis estimates. The improvement transforms unusable volatility into 
